@@ -21,7 +21,12 @@
     ],
     "content_scripts": [
       {
-        "matches": ["https://freshlive.tv/*"],
+        "matches": [
+          "https://freshlive.tv/*", 
+          "https://www.openrec.tv/*", 
+          "https://abema.tv/*",
+          "http://live2.nicovideo.jp/watch/*"
+        ],
         "run_at": "document_end",
         "js": ["./assets/scripts/inject.js"]
       }
@@ -30,6 +35,11 @@
       "/assets/scripts/inject_core.js"
     ],
     "externally_connectable": {
-      "matches": ["https://freshlive.tv/*"]
+      "matches": [
+        "https://freshlive.tv/*", 
+        "https://www.openrec.tv/*", 
+        "https://abema.tv/*",
+        "http://live2.nicovideo.jp/watch/*"
+      ]
     }
   }

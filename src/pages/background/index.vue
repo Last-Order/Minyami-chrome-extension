@@ -11,10 +11,15 @@ export default {
       sender,
       sendResponse
     ) {
-      if (message.type === "playlist") {
+      if (message.type === 'playlist') {
         const playlist = new Playlist(message.content, message.url, message.title);
         if (!Storage.getHistory(sender.url).some(p => p.url === playlist.url)) {
           Storage.setHistory(sender.url, playlist);
+        }
+      } 
+      if (message.type === 'key') {
+        if (!Storage.getHistory(sender.url + '-key').includes(message.key)) {
+          Storage.setHistory(sender.url + '-key', message.key);
         }
       }
     });
@@ -27,6 +32,7 @@ export default {
     chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
       if (tabToUrl[tabId]) {
         Storage.removeHistory(tabToUrl[tabId]);
+        Storage.removeHistory(tabToUrl[tabId] + '-key');
         delete tabToUrl[tabId];
       }
     });
