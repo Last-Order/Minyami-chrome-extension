@@ -1,0 +1,35 @@
+{
+    "name": "Minyami",
+    "version": "1.0.0",
+    "author": "Eridanus Sora",
+    "manifest_version": 2,
+    "description": "Shiny监视",
+    "browser_action": {
+      "default_popup": "./config/index.html",
+      "default_title": "打开设置"
+    },
+    "background": {
+      "page": "./background/index.html",
+      "persistent": true
+    },
+    "permissions": [
+      "tabs",
+      "storage",
+      "webRequest",
+      "http://*/*",
+      "https://*/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["https://freshlive.tv/*"],
+        "run_at": "document_end",
+        "js": ["./assets/scripts/inject.js"]
+      }
+    ],
+    "web_accessible_resources": [
+      "/assets/scripts/inject_core.js"
+    ],
+    "externally_connectable": {
+      "matches": ["https://freshlive.tv/*"]
+    }
+  }
