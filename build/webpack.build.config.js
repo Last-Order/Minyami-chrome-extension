@@ -44,6 +44,7 @@ const generateConfig = (input) => {
             function() {
                 const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json')));
                 fs.mkdirSync(path.resolve(__dirname, '../dist/'));
+                delete manifest.key;
                 fs.writeFileSync(path.resolve(__dirname, '../dist/manifest.json'), JSON.stringify(manifest, null, 2))
             }
         ],
