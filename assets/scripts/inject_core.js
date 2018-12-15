@@ -23,14 +23,14 @@
             }
             if (this.readyState === 4 && new URL(this.responseURL).pathname.endsWith('m3u8')) {
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
-                    chrome.runtime.sendMessage("jhmfiobhajekkolijmmlmncgmhfajmgp", {
+                    chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                         "type": "playlist",
                         "content": this.responseText,
                         "url": this.responseURL,
                         "title": document.title
                     })
                 } else {
-                    chrome.runtime.sendMessage("jhmfiobhajekkolijmmlmncgmhfajmgp", {
+                    chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                         "type": "chunklist",
                         "content": this.responseText,
                         "url": this.responseURL,
@@ -66,7 +66,7 @@
                         }
                         const aKey = Array.from(new Uint8Array(arguments[3].proxy.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
                         key = aKey;
-                        chrome.runtime.sendMessage("jhmfiobhajekkolijmmlmncgmhfajmgp", {
+                        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                             "type": "key",
                             "key": key
                         });
@@ -80,7 +80,7 @@
         try {
             const liveData = JSON.parse(document.querySelector('#embedded-data').getAttribute('data-props'));
             key = liveData.player.audienceToken;
-            chrome.runtime.sendMessage("jhmfiobhajekkolijmmlmncgmhfajmgp", {
+            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                 "type": "key",
                 "key": key
             });

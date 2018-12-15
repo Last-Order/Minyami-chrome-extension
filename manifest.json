@@ -1,12 +1,12 @@
 {
     "name": "Minyami",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "author": "Eridanus Sora",
     "manifest_version": 2,
-    "description": "Shiny监视",
+    "description": "Minyami Chrome Extension",
     "browser_action": {
       "default_popup": "./config/index.html",
-      "default_title": "打开设置"
+      "default_title": "查看当前流"
     },
     "background": {
       "page": "./background/index.html",
