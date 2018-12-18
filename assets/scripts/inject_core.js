@@ -27,14 +27,14 @@
                         "type": "playlist",
                         "content": this.responseText,
                         "url": this.responseURL,
-                        "title": document.title
+                        "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
                     })
                 } else {
                     chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                         "type": "chunklist",
                         "content": this.responseText,
                         "url": this.responseURL,
-                        "title": document.title
+                        "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
                     })
                 }
                 switch (location.host) {
