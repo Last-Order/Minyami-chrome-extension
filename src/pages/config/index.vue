@@ -1,5 +1,21 @@
 <template>
   <div class="main-container">
+    <div>
+      <el-button type="text" @click="showConfig = true">设置</el-button>
+      <el-card v-if="showConfig" class="config-container">
+        <el-form>
+          <el-form-item label="代理">
+            <el-input v-model="configForm.proxy"></el-input>
+          </el-form-item>
+          <el-form-item label="并发数量">
+            <el-input v-model="configForm.threads"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="saveConfig">保存</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
     <el-card v-if="playlists.length === 0">
       <div style="text-align: center">"暂无数据"</div>
     </el-card>
@@ -54,6 +70,9 @@
   min-width: 600px;
   min-height: 600px;
 }
+.config-container {
+  margin: 1rem auto;
+}
 .playlist-item {
   margin: 1rem 0;
   max-width: 600px;
@@ -64,7 +83,7 @@
   word-wrap: none;
   white-space: nowrap;
 }
-.el-form-item {
+.playlist-item .el-form-item {
   margin-bottom: 0 !important;
 }
 </style>
@@ -78,10 +97,17 @@ export default {
       form: {
         recoverMode: false
       },
-      currentUrl: ""
+      configForm: {
+        proxy: '',
+        threads: ''
+      },
+      currentUrl: "",
+      showConfig: false
     };
   },
   mounted() {
+    this.configForm.proxy = Storage.getConfig('proxy');
+    this.configForm.threads = Storage.getConfig('threads');
     setInterval(this.getKeys, 1000);
     setInterval(this.check, 1000);
     this.check();
@@ -108,6 +134,12 @@ export default {
       }
       if (this.keys.length > 0) {
         command += ` --key ${this.keys[0]}`;
+      }
+      if (Storage.getConfig('threads')) {
+        command += ` --threads ${Storage.getConfig('threads')}`;
+      }
+      if (Storage.getConfig('proxy')) {
+        command += ` --proxy "${Storage.getConfig('proxy')}"`;
       }
       return command;
     },
@@ -137,6 +169,23 @@ export default {
         return true;
       }
       return false;
+    },
+    saveConfig() {
+      const proxy = this.configForm.proxy;
+      const threads = this.configForm.threads;
+      // if (!Number.isInteger(parseInt(threads)) || parseInt(threads) <= 0) {
+      //   return this.$message({
+      //     type: 'error',
+      //     message: '并发数必须是正整数'
+      //   })
+      // }
+      if (proxy) {
+        Storage.setConfig('proxy', proxy);
+      }
+      if (threads) {
+        Storage.setConfig('threads', threads);
+      }
+      this.showConfig = false;
     }
   }
 };

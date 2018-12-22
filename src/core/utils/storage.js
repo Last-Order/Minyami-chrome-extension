@@ -63,6 +63,32 @@ class Storage {
             return true;
         }
     }
+    static getConfig(key) {
+        const config = localStorage.getItem('config');
+        if (!config) {
+            return undefined;
+        }
+        try {
+            const parsedConfig = JSON.parse(config);
+            return parsedConfig[key];
+        } catch (e) {
+            localStorage.setItem('config', '{}');
+            return undefined;
+        }
+    }
+    static setConfig(key, value) {
+        const config = localStorage.getItem('config');
+        if (!config) {
+            localStorage.setItem('config', JSON.stringify({[key]: value}));
+        }
+        try {
+            const parsedConfig = JSON.parse(config);
+            parsedConfig[key] = value;
+            localStorage.setItem('config', JSON.stringify(parsedConfig));
+        } catch (e) {
+            localStorage.setItem('config', JSON.stringify({[key]: value}));
+        }
+    }
 }
 
 export default Storage;
