@@ -168,6 +168,9 @@ export default {
       if (this.currentUrl.includes("live2.nicovideo.jp") && this.keys.length === 0) {
         return true;
       }
+      if (this.currentUrl.includes("dmm.com") && this.keys.length === 0) {
+        return true;
+      }
       return false;
     },
     saveConfig() {
