@@ -20,7 +20,10 @@
       <div style="text-align: center">"暂无数据"</div>
     </el-card>
     <el-card v-if="showNoKeyWarning()">
-      <el-alert title="该站点需要 Key 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
+      <el-alert title="该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
+    </el-card>
+    <el-card v-if="showNoCookiesWarning()">
+      <el-alert title="该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
     <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url">
       <div>
@@ -94,24 +97,27 @@ export default {
     return {
       playlists: [],
       keys: [],
+      cookies: [],
       form: {
         recoverMode: false
       },
       configForm: {
-        proxy: '',
-        threads: ''
+        proxy: "",
+        threads: ""
       },
       currentUrl: "",
       showConfig: false
     };
   },
   mounted() {
-    this.configForm.proxy = Storage.getConfig('proxy');
-    this.configForm.threads = Storage.getConfig('threads');
+    this.configForm.proxy = Storage.getConfig("proxy");
+    this.configForm.threads = Storage.getConfig("threads");
     setInterval(this.getKeys, 1000);
+    setInterval(this.getCookies, 1000);
     setInterval(this.check, 1000);
     this.check();
     this.getKeys();
+    this.getCookies();
   },
   methods: {
     check() {
@@ -133,13 +139,16 @@ export default {
         command += `${prefix} -r "${chunklist.url}"`;
       }
       if (this.keys.length > 0) {
-        command += ` --key ${this.keys[0]}`;
+        command += ` --key "${this.keys[0]}"`;
       }
-      if (Storage.getConfig('threads')) {
-        command += ` --threads ${Storage.getConfig('threads')}`;
+      if (this.cookies.length > 0) {
+        command += ` --cookies "${this.cookies[0]}"`;
       }
-      if (Storage.getConfig('proxy')) {
-        command += ` --proxy "${Storage.getConfig('proxy')}"`;
+      if (Storage.getConfig("threads")) {
+        command += ` --threads ${Storage.getConfig("threads")}`;
+      }
+      if (Storage.getConfig("proxy")) {
+        command += ` --proxy "${Storage.getConfig("proxy")}"`;
       }
       return command;
     },
@@ -158,18 +167,37 @@ export default {
         }
       });
     },
+    getCookies() {
+      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+        if (tabs[0]) {
+          const cookies = Storage.getHistory(tabs[0].url + "-cookies");
+          if (cookies && cookies.length > 0) {
+            this.cookies = cookies;
+          }
+        }
+      });
+    },
     showNoKeyWarning() {
       if (!this.currentUrl) {
         return false;
       }
-      if (this.currentUrl.includes("abema.tv") && this.keys.length === 0) {
-        return true;
+      const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com"];
+      for (const site of needKeySites) {
+        if (this.currentUrl.includes(site) && this.keys.length === 0) {
+          return true;
+        }
       }
-      if (this.currentUrl.includes("live2.nicovideo.jp") && this.keys.length === 0) {
-        return true;
+      return false;
+    },
+    showNoCookiesWarning() {
+      if (!this.currentUrl) {
+        return false;
       }
-      if (this.currentUrl.includes("dmm.com") && this.keys.length === 0) {
-        return true;
+      const needCookiesSites = ["360ch.tv"];
+      for (const site of needCookiesSites) {
+        if (this.currentUrl.includes(site) && this.cookies.length === 0) {
+          return true;
+        }
       }
       return false;
     },
@@ -183,10 +211,10 @@ export default {
       //   })
       // }
       if (proxy) {
-        Storage.setConfig('proxy', proxy);
+        Storage.setConfig("proxy", proxy);
       }
       if (threads) {
-        Storage.setConfig('threads', threads);
+        Storage.setConfig("threads", threads);
       }
       this.showConfig = false;
     }

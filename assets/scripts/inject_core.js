@@ -57,6 +57,10 @@
                     dmm(this);
                     break;
                 }
+                case 'www.360ch.tv': {
+                    ch360(this);
+                    break;
+                }
             }
         });
     }
@@ -107,6 +111,13 @@
                 "key": key
             });
         }
+    }
+
+    const ch360 = (xhr) => {
+        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            "type": "cookies",
+            "cookies": 'ch360pt=' + document.cookie.match(/ch360pt\=(.+?)(;|$)/)[1]
+        });
     }
 
     const nextTick = () => new Promise(resolve => setTimeout(resolve, 0));

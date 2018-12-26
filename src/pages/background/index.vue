@@ -11,15 +11,32 @@ export default {
       sender,
       sendResponse
     ) {
-      if (message.type === 'playlist') {
-        const playlist = new Playlist(message.content, message.url, message.title);
-        if (!Storage.getHistory(sender.tab.url).some(p => p.url === playlist.url)) {
+      if (message.type === "playlist") {
+        const playlist = new Playlist(
+          message.content,
+          message.url,
+          message.title
+        );
+        if (
+          !Storage.getHistory(sender.tab.url).some(p => p.url === playlist.url)
+        ) {
           Storage.setHistory(sender.tab.url, playlist);
         }
-      } 
-      if (message.type === 'key') {
-        if (!Storage.getHistory(sender.tab.url + '-key').includes(message.key)) {
-          Storage.setHistory(sender.tab.url + '-key', message.key);
+      }
+      if (message.type === "key") {
+        if (
+          !Storage.getHistory(sender.tab.url + "-key").includes(message.key)
+        ) {
+          Storage.setHistory(sender.tab.url + "-key", message.key);
+        }
+      }
+      if (message.type === "cookies") {
+        if (
+          !Storage.getHistory(sender.tab.url + "-cookies").includes(
+            message.cookies
+          )
+        ) {
+          Storage.setHistory(sender.tab.url + "-cookies", message.cookies);
         }
       }
     });
@@ -27,12 +44,19 @@ export default {
     const tabToUrl = {};
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
       tabToUrl[tabId] = tab.url;
+      if (changeInfo.status && changeInfo.status === "loading") {
+        // 刷新时移除原有数据
+        Storage.removeHistory(tabToUrl[tabId]);
+        Storage.removeHistory(tabToUrl[tabId] + "-key");
+        Storage.removeHistory(tabToUrl[tabId] + "-cookies");
+      }
     });
 
     chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
       if (tabToUrl[tabId]) {
         Storage.removeHistory(tabToUrl[tabId]);
-        Storage.removeHistory(tabToUrl[tabId] + '-key');
+        Storage.removeHistory(tabToUrl[tabId] + "-key");
+        Storage.removeHistory(tabToUrl[tabId] + "-cookies");
         delete tabToUrl[tabId];
       }
     });
