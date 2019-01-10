@@ -61,6 +61,9 @@
                     ch360(this);
                     break;
                 }
+                case 'cas.nicovideo.jp': {
+                    nicocas(this);
+                }
             }
         });
     }
@@ -101,6 +104,17 @@
         } catch {
 
         }
+    }
+
+    const nicocas = () => {
+        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            "type": "cookies",
+            "cookies": 'user_session=' + document.cookie.match(/user_session\=(.+?)(;|$)/)[1]
+        });
+        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            "type": "key",
+            "key": `<CAS_MODE, ID=${location.href.match(/(lv\d+)/)[1]}>`
+        });
     }
 
     const dmm = (xhr) => {
