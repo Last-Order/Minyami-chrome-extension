@@ -206,7 +206,7 @@ export default {
       return false;
     },
     showNotSupported() {
-      return !supportedSites.includes(location.host);
+      return !this.currentUrl || !supportedSites.includes(new URL(this.currentUrl).host);
     },
     saveConfig() {
       const proxy = this.configForm.proxy;
