@@ -25,6 +25,9 @@
     <el-card v-if="showNoCookiesWarning()">
       <el-alert title="该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
+    <el-card v-if="showNotSupported()">
+      <el-alert title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载" type="error"></el-alert>
+    </el-card>
     <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url">
       <div>
         <div :title="playlist.url" class="playlist-item-playlist-url">
@@ -92,6 +95,7 @@
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
+import { supportedSites } from '../../definitions';
 export default {
   data() {
     return {
@@ -200,6 +204,9 @@ export default {
         }
       }
       return false;
+    },
+    showNotSupported() {
+      return !supportedSites.includes(location.host);
     },
     saveConfig() {
       const proxy = this.configForm.proxy;
