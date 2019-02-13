@@ -1,6 +1,44 @@
 (async () => {
     console.info(`Minyami Extractor inited.`);
+
+    // Utils
+    const nextTick = () => new Promise(resolve => setTimeout(resolve, 0));
+    const sleep = (time) => new Promise(resolve => setTimeout(resolve, time));
+
+
     let key = '';
+    if (window.fetch) {
+        const _fetch = fetch;
+        fetch = (url, ...fargs) => {
+            return new Promise((resolve, reject) => {
+                _fetch(url, ...fargs).then(async res => {
+                    resolve(res);
+                    return res.clone();
+                }).then(async r => {
+                    if (r.url.includes('m3u8')) {
+                        const responseText = await r.text();
+                        if (responseText.match(/#EXT-X-STREAM-INF/) !== null) {
+                            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                                "type": "playlist",
+                                "content": responseText,
+                                "url": r.url,
+                                "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
+                            })
+                        } else {
+                            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                                "type": "chunklist",
+                                "content": responseText,
+                                "url": r.url,
+                                "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
+                            })
+                        }
+                    }
+                }).catch(e => {
+                    reject(e);
+                });
+            })
+        }
+    }
     XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
     Object.defineProperty(XMLHttpRequest.prototype, 'open', {
         get: function () {
@@ -37,11 +75,8 @@
                         "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
                     })
                 }
+                // Execute after m3u8 loads
                 switch (location.host) {
-                    case 'abema.tv': {
-                        abema(this);
-                        break;
-                    }
                     case 'live2.nicovideo.jp': {
                         nico();
                         break;
@@ -52,6 +87,7 @@
                     }
                 }
             }
+            // Execute when first AJAX request finished
             switch (location.host) {
                 case 'www.dmm.com': {
                     dmm(this);
@@ -73,24 +109,22 @@
     /**
      * Get key for Abema!
      */
-    const abema = (xhr) => {
-        if (xhr.readyState === 4) {
-            XMLHttpRequest.prototype = new Proxy(XMLHttpRequest.prototype, {
-                set: async function (obj, prop, value) {
-                    if (arguments[3].proxy) {
-                        while (!arguments[3].proxy.response) {
-                            await sleep(100);
-                        }
-                        const aKey = Array.from(new Uint8Array(arguments[3].proxy.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
-                        key = aKey;
+    const abema = () => {
+        const _Uint8Array = Uint8Array;
+        Uint8Array = class extends _Uint8Array {
+            constructor(...args) {
+                super(...args)
+                if (this.length === 16) {
+                    const key = Array.from(new _Uint8Array(this)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
+                    if (key !== '00000000000000000000000000000000') {
                         chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                             "type": "key",
                             "key": key
                         });
                     }
-                    return Reflect.set(...arguments);
                 }
-            });
+                return this;
+            }
         }
     }
     const nico = () => {
@@ -134,6 +168,11 @@
         });
     }
 
-    const nextTick = () => new Promise(resolve => setTimeout(resolve, 0));
-    const sleep = (time) => new Promise(resolve => setTimeout(resolve, time));
+    // Execute when load
+    switch (location.host) {
+        case 'abema.tv': {
+            abema();
+            break;
+        }
+    }
 })()

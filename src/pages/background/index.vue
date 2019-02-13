@@ -11,6 +11,7 @@ export default {
       sender,
       sendResponse
     ) {
+      console.log(message);
       if (message.type === "playlist") {
         const playlist = new Playlist(
           message.content,
