@@ -1,6 +1,6 @@
 {
     "name": "Minyami",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "author": "Eridanus Sora",
     "manifest_version": 2,
     "description": "Minyami Chrome Extension",
@@ -21,8 +21,7 @@
       "https://abema.tv/*",
       "http://live2.nicovideo.jp/watch/*",
       "https://cas.nicovideo.jp/*",
-      "https://gyao.yahoo.co.jp/player/*",
-      "https://gyao.yahoo.co.jp/title/*",
+      "https://gyao.yahoo.co.jp/*",
       "http://www.dmm.com/digital/-/player/*",
       "https://www.360ch.tv/video/view/*",
       "http://www.sonymusic.co.jp/*"
@@ -35,8 +34,7 @@
           "https://abema.tv/*",
           "http://live2.nicovideo.jp/watch/*",
           "https://cas.nicovideo.jp/*",
-          "https://gyao.yahoo.co.jp/player/*",
-          "https://gyao.yahoo.co.jp/title/*",
+          "https://gyao.yahoo.co.jp/*",
           "http://www.dmm.com/digital/-/player/*",
           "https://www.360ch.tv/video/view/*",
           "http://www.sonymusic.co.jp/*"
@@ -55,8 +53,7 @@
         "https://abema.tv/*",
         "http://live2.nicovideo.jp/watch/*",
         "https://cas.nicovideo.jp/*",
-        "https://gyao.yahoo.co.jp/player/*",
-        "https://gyao.yahoo.co.jp/title/*",
+        "https://gyao.yahoo.co.jp/*",
         "http://www.dmm.com/digital/-/player/*",
         "https://www.360ch.tv/video/view/*",
         "http://www.sonymusic.co.jp/*"
