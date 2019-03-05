@@ -33,14 +33,18 @@
         <div :title="playlist.url" class="playlist-item-playlist-url">
           <span>{{playlist.url}}</span>
         </div>
-        <el-form>
+        <el-form :inline="true">
           <el-form-item>
-            <el-switch
-              style="display: block"
+            <el-checkbox
               v-model="form.recoverMode"
-              active-text="恢复模式"
-              inactive-text="下载模式"
-            ></el-switch>
+              label="恢复模式"
+            ></el-checkbox>
+          </el-form-item>
+          <el-form-item>
+            <el-checkbox
+              v-model="form.live"
+              label="下载直播"
+            ></el-checkbox>
           </el-form-item>
         </el-form>
         <template v-for="(chunkList, index) in playlist.chunkLists">
@@ -103,7 +107,8 @@ export default {
       keys: [],
       cookies: [],
       form: {
-        recoverMode: false
+        recoverMode: false,
+        live: false
       },
       configForm: {
         proxy: "",
@@ -147,6 +152,9 @@ export default {
       }
       if (this.cookies.length > 0) {
         command += ` --cookies "${this.cookies[0]}"`;
+      }
+      if (this.form.live) {
+        command += ` --live`;
       }
       if (Storage.getConfig("threads")) {
         command += ` --threads ${Storage.getConfig("threads")}`;
