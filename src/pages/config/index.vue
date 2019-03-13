@@ -225,12 +225,8 @@ export default {
       //     message: '并发数必须是正整数'
       //   })
       // }
-      if (proxy) {
-        Storage.setConfig("proxy", proxy);
-      }
-      if (threads) {
-        Storage.setConfig("threads", threads);
-      }
+      Storage.setConfig("proxy", proxy);
+      Storage.setConfig("threads", threads);
       this.showConfig = false;
     }
   }
