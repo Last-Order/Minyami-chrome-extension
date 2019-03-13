@@ -168,10 +168,21 @@
         });
     }
 
+    const twicas = async () => {
+        const userName = location.href.match(/https:\/\/twitcasting.tv\/(.+)/);
+        if (userName) {
+            await fetch(`https://twitcasting.tv/${userName[1]}/metastream.m3u8`);
+        }
+    }
+
     // Execute when load
     switch (location.host) {
         case 'abema.tv': {
             abema();
+            break;
+        }
+        case 'twitcasting.tv': {
+            twicas();
             break;
         }
     }
