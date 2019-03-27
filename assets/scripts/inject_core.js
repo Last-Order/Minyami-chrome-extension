@@ -155,6 +155,10 @@
         if (xhr.readyState === 4 && xhr.responseURL.startsWith('https://www.dmm.com/service/-/drm_iphone')) {
             const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
             chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                "type": "cookies",
+                "cookies": 'licenseUID=' + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
+            });
+            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
                 "type": "key",
                 "key": key
             });
@@ -181,6 +185,10 @@
             abema();
             break;
         }
+        // case 'www.dmm.com': {
+        //     abema();
+        //     break;
+        // }
         case 'twitcasting.tv': {
             twicas();
             break;

@@ -1,6 +1,6 @@
 {
     "name": "Minyami",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "author": "Eridanus Sora",
     "manifest_version": 2,
     "description": "Minyami Chrome Extension",
@@ -23,9 +23,9 @@
       "https://live2.nicovideo.jp/watch/*",
       "https://cas.nicovideo.jp/*",
       "https://gyao.yahoo.co.jp/*",
-      "http://www.dmm.com/digital/-/player/*",
+      "https://www.dmm.com/digital/-/player/*",
       "https://www.360ch.tv/video/view/*",
-      "http://www.sonymusic.co.jp/*",
+      "https://www.sonymusic.co.jp/*",
       "https://twitcasting.tv/*",
       "https://www.showroom-live.com/*"
     ],
@@ -39,9 +39,9 @@
           "https://live2.nicovideo.jp/watch/*",
           "https://cas.nicovideo.jp/*",
           "https://gyao.yahoo.co.jp/*",
-          "http://www.dmm.com/digital/-/player/*",
+          "https://www.dmm.com/digital/-/player/*",
           "https://www.360ch.tv/video/view/*",
-          "http://www.sonymusic.co.jp/*",
+          "https://www.sonymusic.co.jp/*",
           "https://twitcasting.tv/*",
           "https://www.showroom-live.com/*"
         ],
@@ -61,9 +61,9 @@
         "https://live2.nicovideo.jp/watch/*",
         "https://cas.nicovideo.jp/*",
         "https://gyao.yahoo.co.jp/*",
-        "http://www.dmm.com/digital/-/player/*",
+        "https://www.dmm.com/digital/-/player/*",
         "https://www.360ch.tv/video/view/*",
-        "http://www.sonymusic.co.jp/*",
+        "https://www.sonymusic.co.jp/*",
         "https://twitcasting.tv/*",
         "https://www.showroom-live.com/*"
       ]
