@@ -9,5 +9,7 @@ export const supportedSites = [
     "www.360ch.tv",
     "www.sonymusic.co.jp",
     "twitcasting.tv",
-    "www.showroom-live.com"
+    "www.showroom-live.com",
+    "hibiki-radio.jp",
+    "www.youtube.com"
 ];

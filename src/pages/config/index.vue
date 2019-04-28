@@ -193,7 +193,7 @@ export default {
       if (!this.currentUrl) {
         return false;
       }
-      const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com"];
+      const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com", "hibiki-radio.jp"];
       for (const site of needKeySites) {
         if (this.currentUrl.includes(site) && this.keys.length === 0) {
           return true;

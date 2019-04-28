@@ -100,6 +100,9 @@
                 case 'cas.nicovideo.jp': {
                     nicocas(this);
                 }
+                case 'hibiki-radio.jp': {
+                    hibiki(this);
+                }
             }
         });
     }
@@ -125,6 +128,15 @@
                 }
                 return this;
             }
+        }
+    }
+    const hibiki = (xhr) => {
+        if (xhr.readyState === 4 && xhr.responseURL.includes('datakey')) {
+            const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
+            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                "type": "key",
+                "key": key
+            });
         }
     }
     const nico = () => {
@@ -179,10 +191,26 @@
         }
     }
 
+    const youtube = async () => {
+        const playerResponse = ytplayer.config.args.player_response;
+        if (playerResponse) {
+            const HlsManifestUrl = JSON.parse(playerResponse).streamingData.hlsManifestUrl;
+            await fetch(HlsManifestUrl);
+        }
+        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            "type": "cookies",
+            "cookies": 'PREF=' + document.cookie.match(/PREF\=(.+?)(;|$)/)[1]
+        });
+    }
+
     // Execute when load
     switch (location.host) {
         case 'abema.tv': {
             abema();
+            break;
+        }
+        case 'hibiki-radio.jp': {
+            hibiki();
             break;
         }
         // case 'www.dmm.com': {
@@ -191,6 +219,10 @@
         // }
         case 'twitcasting.tv': {
             twicas();
+            break;
+        }
+        case 'www.youtube.com': {
+            youtube();
             break;
         }
     }

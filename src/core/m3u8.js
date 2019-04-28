@@ -17,8 +17,8 @@ export class Playlist {
                 }
                 if (line.match(/RESOLUTION=(.+)(\n|$)/) !== null) {
                     chunkList.resolution = {
-                        x: line.match(/RESOLUTION=(.+)(\n|$)/)[1].split('x')[0],
-                        y: line.match(/RESOLUTION=(.+)(\n|$)/)[1].split('x')[1]
+                        x: line.match(/RESOLUTION=(.+?)(\n|$|\,)/)[1].split('x')[0],
+                        y: line.match(/RESOLUTION=(.+?)(\n|$|\,)/)[1].split('x')[1]
                     }
                 }
                 chunkList.url = CommonUtils.buildFullUrl(this.url, lines[index + 1]);
