@@ -32,7 +32,7 @@
     "webpack": "^4.5.0"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "element-ui": "^2.3.4",
     "vue": "^2.5.16"
   }
