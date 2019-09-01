@@ -2,7 +2,7 @@
   <div class="main-container">
     <div>
       <el-button type="text" @click="showConfig = true">设置</el-button>
-      <el-card v-if="showConfig" class="config-container">
+      <el-card v-if="showConfig" class="config-container" shadow="never">
         <el-form>
           <el-form-item label="代理">
             <el-input v-model="configForm.proxy"></el-input>
@@ -16,19 +16,22 @@
         </el-form>
       </el-card>
     </div>
-    <el-card v-if="playlists.length === 0">
+    <el-card v-if="playlists.length === 0" shadow="never">
       <div style="text-align: center">"暂无数据"</div>
     </el-card>
-    <el-card v-if="showNoKeyWarning()">
+    <el-card v-if="showNoKeyWarning()" shadow="never">
       <el-alert title="该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
-    <el-card v-if="showNoCookiesWarning()">
+    <el-card v-if="showNoCookiesWarning()" shadow="never">
       <el-alert title="该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
-    <el-card v-if="showNotSupported()">
+    <el-card v-if="showCookieWarning()" shadow="never">
+      <el-alert title="生成的命令包含您的 Cookies 请不要随意复制给他人" type="warning"></el-alert>
+    </el-card>
+    <el-card v-if="showNotSupported()" shadow="never">
       <el-alert title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载" type="error"></el-alert>
     </el-card>
-    <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url">
+    <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url" shadow="never">
       <div>
         <div :title="playlist.url" class="playlist-item-playlist-url">
           <span>{{playlist.url}}</span>
@@ -96,10 +99,15 @@
 .playlist-item .el-form-item {
   margin-bottom: 0 !important;
 }
+.el-card {
+  margin: 10px auto;
+}
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
 import { supportedSites } from '../../definitions';
+const needCookiesSites = ["360ch.tv"];
+const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com", "hibiki-radio.jp"];
 export default {
   data() {
     return {
@@ -193,7 +201,6 @@ export default {
       if (!this.currentUrl) {
         return false;
       }
-      const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com", "hibiki-radio.jp"];
       for (const site of needKeySites) {
         if (this.currentUrl.includes(site) && this.keys.length === 0) {
           return true;
@@ -205,7 +212,17 @@ export default {
       if (!this.currentUrl) {
         return false;
       }
-      const needCookiesSites = ["360ch.tv"];
+      for (const site of needCookiesSites) {
+        if (this.currentUrl.includes(site) && this.cookies.length === 0) {
+          return true;
+        }
+      }
+      return false;
+    },
+    showCookieWarning() {
+      if (!this.currentUrl) {
+        return false;
+      }
       for (const site of needCookiesSites) {
         if (this.currentUrl.includes(site) && this.cookies.length === 0) {
           return true;
