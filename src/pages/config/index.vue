@@ -29,7 +29,10 @@
       <el-alert title="生成的命令包含您的 Cookies 请不要随意复制给他人" type="warning"></el-alert>
     </el-card>
     <el-card v-if="showNotSupported()" shadow="never">
-      <el-alert title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载" type="error"></el-alert>
+      <el-alert
+        title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载"
+        type="error"
+      ></el-alert>
     </el-card>
     <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url" shadow="never">
       <div>
@@ -38,26 +41,29 @@
         </div>
         <el-form :inline="true">
           <el-form-item>
-            <el-checkbox
-              v-model="form.recoverMode"
-              label="恢复模式"
-            ></el-checkbox>
+            <el-checkbox v-model="form.recoverMode" label="恢复模式"></el-checkbox>
           </el-form-item>
           <el-form-item>
-            <el-checkbox
-              v-model="form.live"
-              label="下载直播"
-            ></el-checkbox>
+            <el-checkbox v-model="form.live" label="下载直播"></el-checkbox>
           </el-form-item>
         </el-form>
-        <template v-for="(chunkList, index) in playlist.chunkLists">
+        <template v-for="(chunkList) in playlist.chunkLists">
           <el-form class="playlist-chunklist-item" :key="chunkList.url">
-            <el-form-item :label="'流' + (index + 1) + ' 基本信息'">
+            <el-form-item>
               <div class="playlist-chunklist-item-info">
-                <span
-                  v-if="chunkList.resolution"
-                >分辨率：{{chunkList.resolution.x}} × {{chunkList.resolution.y}}</span>
-                <span v-if="chunkList.bandwidth">码率：{{Math.round(chunkList.bandwidth / 1024)}} kbps</span>
+                <template v-if="chunkList.type === 'video'">
+                  <el-tag type="info" size="mini" class="playlist-tag">视频</el-tag>
+                  <span
+                    v-if="chunkList.resolution"
+                  >分辨率：{{chunkList.resolution.x}} × {{chunkList.resolution.y}}</span>
+                  <span
+                    v-if="chunkList.bandwidth"
+                  >码率：{{Math.round(chunkList.bandwidth / 1024)}} kbps</span>
+                </template>
+                <template v-if="chunkList.type === 'audio'">
+                  <el-tag type="info" size="mini" class="playlist-tag">音频</el-tag>
+                  <span>{{ chunkList.name && ` 名称：${chunkList.name}` }}</span>
+                </template>
               </div>
             </el-form-item>
             <el-form-item class="playlist-chunklist-command">
@@ -99,15 +105,23 @@
 .playlist-item .el-form-item {
   margin-bottom: 0 !important;
 }
+.playlist-tag {
+  margin-right: 1rem;
+}
 .el-card {
   margin: 10px auto;
 }
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
-import { supportedSites } from '../../definitions';
+import { supportedSites } from "../../definitions";
 const needCookiesSites = ["360ch.tv"];
-const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com", "hibiki-radio.jp"];
+const needKeySites = [
+  "abema.tv",
+  "live2.nicovideo.jp",
+  "dmm.com",
+  "hibiki-radio.jp"
+];
 export default {
   data() {
     return {
@@ -149,9 +163,7 @@ export default {
       const prefix = "minyami";
       let command = "";
       if (!this.form.recoverMode) {
-        command += `${prefix} -d "${chunklist.url}" --output "${
-          playlist.title
-        }.ts"`;
+        command += `${prefix} -d "${chunklist.url}" --output "${playlist.title}.ts"`;
       } else {
         command += `${prefix} -r "${chunklist.url}"`;
       }
@@ -231,7 +243,10 @@ export default {
       return false;
     },
     showNotSupported() {
-      return !this.currentUrl || !supportedSites.includes(new URL(this.currentUrl).host);
+      return (
+        !this.currentUrl ||
+        !supportedSites.includes(new URL(this.currentUrl).host)
+      );
     },
     saveConfig() {
       const proxy = this.configForm.proxy;

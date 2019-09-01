@@ -11,7 +11,9 @@ export class Playlist {
         const lines = this.content.split('\n');
         lines.forEach((line, index) => {
             if (line.startsWith('#EXT-X-STREAM-INF')) {
-                const chunkList = {};
+                const chunkList = {
+                    type: 'video'
+                };
                 if (line.match(/BANDWIDTH=(\d+)/) !== null) {
                     chunkList.bandwidth = line.match(/BANDWIDTH=(\d+)/)[1];
                 }
@@ -22,6 +24,14 @@ export class Playlist {
                     }
                 }
                 chunkList.url = CommonUtils.buildFullUrl(this.url, lines[index + 1]);
+                this.chunkLists.push(chunkList);
+            }
+            if (line.startsWith('#EXT-X-MEDIA:TYPE=AUDIO')) {
+                const chunkList = {
+                    type: 'audio'
+                };
+                chunkList.url = line.match(/URI="(.+?)"/)[1];
+                chunkList.name = line.match(/NAME="(.+?)"/) && line.match(/NAME="(.+?)"/)[1];
                 this.chunkLists.push(chunkList);
             }
         });

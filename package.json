@@ -27,13 +27,13 @@
     "path": "^0.12.7",
     "style-loader": "^0.20.3",
     "url-loader": "^1.0.1",
-    "vue-loader": "^14.2.2",
-    "vue-template-compiler": "^2.5.16",
-    "webpack": "^4.5.0"
+    "vue-loader": "^14.2.4",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^4.39.3"
   },
   "dependencies": {
     "axios": "^0.18.1",
-    "element-ui": "^2.3.4",
-    "vue": "^2.5.16"
+    "element-ui": "^2.12.0",
+    "vue": "^2.6.10"
   }
 }
