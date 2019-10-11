@@ -113,6 +113,12 @@
      * Get key for Abema!
      */
     const abema = () => {
+        Object.defineProperty(__CLIENT_REGION__, 'isAllowed', {
+            get: () => true
+        });
+        Object.defineProperty(__CLIENT_REGION__, 'status', {
+            get: () => false
+        });
         const _Uint8Array = Uint8Array;
         Uint8Array = class extends _Uint8Array {
             constructor(...args) {
