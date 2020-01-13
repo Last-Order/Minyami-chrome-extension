@@ -219,10 +219,10 @@
             hibiki();
             break;
         }
-        // case 'www.dmm.com': {
-        //     abema();
-        //     break;
-        // }
+        case 'www.dmm.com': {
+            dmm();
+            break;
+        }
         case 'twitcasting.tv': {
             twicas();
             break;
