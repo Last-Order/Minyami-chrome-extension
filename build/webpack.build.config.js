@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
@@ -33,19 +33,23 @@ const generateConfig = (input) => {
             extensions: ['.js', '.vue']
         },
         plugins: [
-            new CleanWebpackPlugin([path.resolve(__dirname, '../dist')], {
-                root: path.resolve(__dirname, '../')
+            new CleanWebpackPlugin({
+                verbose: true
             }),
             new CopyWebpackPlugin([{
                 from: path.resolve(__dirname, '../assets/**/*'), to: path.resolve(__dirname, '../dist/'),
             }]),
             new ExtractTextPlugin("[name].css"),
             ...generateHTMLPluginConf(input),
-            function() {
-                const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json')));
-                fs.mkdirSync(path.resolve(__dirname, '../dist/'));
-                delete manifest.key;
-                fs.writeFileSync(path.resolve(__dirname, '../dist/manifest.json'), JSON.stringify(manifest, null, 2))
+            {
+                apply: (compiler) => {
+                    compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
+                        console.log('Write manifest');
+                        const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json')));
+                        delete manifest.key;
+                        fs.writeFileSync(path.resolve(__dirname, '../dist/manifest.json'), JSON.stringify(manifest, null, 2))
+                    });
+                }
             }
         ],
         module: {

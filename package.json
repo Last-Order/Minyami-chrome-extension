@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/Last-Order/Minyami#readme",
   "devDependencies": {
-    "clean-webpack-plugin": "^0.1.19",
+    "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^4.5.1",
     "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
