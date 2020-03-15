@@ -6,6 +6,7 @@ export const supportedSites = [
     "cas.nicovideo.jp",
     "gyao.yahoo.co.jp",
     "www.dmm.com",
+    "www.dmm.co.jp",
     "www.360ch.tv",
     "www.sonymusic.co.jp",
     "twitcasting.tv",
