@@ -85,12 +85,20 @@
                         dmm(this);
                         break;
                     }
+                    case 'www.dmm.co.jp': {
+                        dmm_r18(this);
+                        break;
+                    }
                 }
             }
             // Execute when first AJAX request finished
             switch (location.host) {
                 case 'www.dmm.com': {
                     dmm(this);
+                    break;
+                }
+                case 'www.dmm.co.jp': {
+                    dmm_r18(this);
                     break;
                 }
                 case 'www.360ch.tv': {
@@ -183,6 +191,20 @@
         }
     }
 
+    const dmm_r18 = (xhr) => {
+        if (xhr.readyState === 4 && xhr.responseURL.startsWith('https://www.dmm.co.jp/service/-/drm_iphone')) {
+            const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
+            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                "type": "cookies",
+                "cookies": 'licenseUID=' + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
+            });
+            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                "type": "key",
+                "key": key
+            });
+        }
+    }
+
     const ch360 = (xhr) => {
         chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
             "type": "cookies",
@@ -221,6 +243,10 @@
         }
         case 'www.dmm.com': {
             dmm();
+            break;
+        }
+        case 'www.dmm.co.jp': {
+            dmm_r18();
             break;
         }
         case 'twitcasting.tv': {
