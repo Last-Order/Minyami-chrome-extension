@@ -14,13 +14,29 @@ export default {
       sender,
       sendResponse
     ) {
-      console.log(message);
+      // console.log(message);
       if (message.type === "playlist") {
         const playlist = new Playlist(
           message.content,
           message.url,
           message.title
         );
+        if (
+          !Storage.getHistory(sender.tab.url).some(p => p.url === playlist.url)
+        ) {
+          Storage.setHistory(sender.tab.url, playlist);
+        }
+      }
+      if (message.type === "playlist_chunklist") {
+        console.log(message);
+        const playlist = new Playlist(
+          message.content,
+          message.url,
+          message.title,
+          true
+        );
+        playlist.chunkLists = message.chunkLists;
+        console.log(playlist);
         if (
           !Storage.getHistory(sender.tab.url).some(p => p.url === playlist.url)
         ) {

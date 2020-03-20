@@ -1,11 +1,13 @@
 import CommonUtils from './utils/common';
 export class Playlist {
-    constructor(content, url, title = "") {
+    constructor(content, url, title = "", disableAutoParse = false) {
         this.content = content;
         this.url = url;
         this.chunkLists = [];
         this.title = title;
-        this.parse();
+        if (!disableAutoParse) {
+            this.parse();
+        }
     }
     parse() {
         const lines = this.content.split('\n');

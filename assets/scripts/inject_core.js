@@ -111,6 +111,9 @@
                 case 'hibiki-radio.jp': {
                     hibiki(this);
                 }
+                case 'www.showroom-live.com': {
+                    showroom(this);
+                }
             }
         });
     }
@@ -229,6 +232,31 @@
             "type": "cookies",
             "cookies": 'PREF=' + document.cookie.match(/PREF\=(.+?)(;|$)/)[1]
         });
+    }
+
+    const showroom = (xhr) => {
+        if (xhr.responseURL.includes('api/live/streaming_url')) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.streaming_url_list.some(i => i.url.endsWith('chunklist.m3u8'))) {
+                chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                    "type": "playlist_chunklist",
+                    "content": xhr.responseText,
+                    "url": xhr.responseURL,
+                    "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, ""),
+                    "chunkLists": response.streaming_url_list.filter(i => i.url.endsWith('chunklist.m3u8')).map(i => {
+                        return {
+                            "type": "video",
+                            "bandwidth": i.quality * 1024,
+                            "resolution": {
+                                x: 'Unknown',
+                                y: 'Unknown'
+                            },
+                            url: i.url
+                        }
+                    })
+                });
+            }
+        }
     }
 
     // Execute when load
