@@ -12,6 +12,9 @@
       "page": "./background/index.html",
       "persistent": true
     },
+    "icons": { 
+      "128": "assets/logo.png" 
+    },
     "permissions": [
       "tabs",
       "storage",

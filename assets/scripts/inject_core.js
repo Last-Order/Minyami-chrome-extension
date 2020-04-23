@@ -1,10 +1,6 @@
 (async () => {
     console.info(`Minyami Extractor inited.`);
-
-    // Utils
-    const nextTick = () => new Promise(resolve => setTimeout(resolve, 0));
-    const sleep = (time) => new Promise(resolve => setTimeout(resolve, time));
-
+    const MINYAMI_EXTENSION_ID = navigator.userAgent.includes('Edg') ? "djgfdgeokfljmadfphgoemldapjilanp" : "cgejkofhdaffiifhcohjdbbheldkiaed";
 
     let key = '';
     if (window.fetch) {
@@ -18,14 +14,14 @@
                     if (r.url.includes('m3u8')) {
                         const responseText = await r.text();
                         if (responseText.match(/#EXT-X-STREAM-INF/) !== null) {
-                            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                                 "type": "playlist",
                                 "content": responseText,
                                 "url": r.url,
                                 "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
                             })
                         } else {
-                            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                                 "type": "chunklist",
                                 "content": responseText,
                                 "url": r.url,
@@ -61,14 +57,14 @@
             }
             if (this.readyState === 4 && new URL(this.responseURL).pathname.endsWith('m3u8')) {
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
-                    chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                    chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                         "type": "playlist",
                         "content": this.responseText,
                         "url": this.responseURL,
                         "title": document.title.replace(/[\/\*\\\:|\?<>]/ig, "")
                     })
                 } else {
-                    chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                    chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                         "type": "chunklist",
                         "content": this.responseText,
                         "url": this.responseURL,
@@ -137,7 +133,7 @@
                 if (this.length === 16) {
                     const key = Array.from(new _Uint8Array(this)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
                     if (key !== '00000000000000000000000000000000') {
-                        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                             "type": "key",
                             "key": key
                         });
@@ -150,7 +146,7 @@
     const hibiki = (xhr) => {
         if (xhr.readyState === 4 && xhr.responseURL.includes('datakey')) {
             const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "key",
                 "key": key
             });
@@ -160,7 +156,7 @@
         try {
             const liveData = JSON.parse(document.querySelector('#embedded-data').getAttribute('data-props'));
             key = liveData.player.audienceToken;
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "key",
                 "key": key
             });
@@ -170,11 +166,11 @@
     }
 
     const nicocas = () => {
-        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
             "type": "cookies",
             "cookies": 'user_session=' + document.cookie.match(/user_session\=(.+?)(;|$)/)[1]
         });
-        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
             "type": "key",
             "key": `<CAS_MODE, ID=${location.href.match(/(lv\d+)/)[1]}>`
         });
@@ -183,11 +179,11 @@
     const dmm = (xhr) => {
         if (xhr.readyState === 4 && xhr.responseURL.startsWith('https://www.dmm.com/service/-/drm_iphone')) {
             const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "cookies",
                 "cookies": 'licenseUID=' + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
             });
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "key",
                 "key": key
             });
@@ -197,11 +193,11 @@
     const dmm_r18 = (xhr) => {
         if (xhr.readyState === 4 && xhr.responseURL.startsWith('https://www.dmm.co.jp/service/-/drm_iphone')) {
             const key = Array.from(new Uint8Array(xhr.response)).map(i => i.toString(16).length === 1 ? '0' + i.toString(16) : i.toString(16)).join('');
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "cookies",
                 "cookies": 'licenseUID=' + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
             });
-            chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                 "type": "key",
                 "key": key
             });
@@ -209,7 +205,7 @@
     }
 
     const ch360 = (xhr) => {
-        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
             "type": "cookies",
             "cookies": 'ch360pt=' + document.cookie.match(/ch360pt\=(.+?)(;|$)/)[1]
         });
@@ -228,7 +224,7 @@
             const HlsManifestUrl = JSON.parse(playerResponse).streamingData.hlsManifestUrl;
             await fetch(HlsManifestUrl);
         }
-        chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
             "type": "cookies",
             "cookies": 'PREF=' + document.cookie.match(/PREF\=(.+?)(;|$)/)[1]
         });
@@ -238,7 +234,7 @@
         if (xhr.responseURL.includes('api/live/streaming_url')) {
             const response = JSON.parse(xhr.responseText);
             if (response.streaming_url_list.some(i => i.url.endsWith('chunklist.m3u8'))) {
-                chrome.runtime.sendMessage("cgejkofhdaffiifhcohjdbbheldkiaed", {
+                chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                     "type": "playlist_chunklist",
                     "content": xhr.responseText,
                     "url": xhr.responseURL,

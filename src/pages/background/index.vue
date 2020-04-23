@@ -6,8 +6,8 @@ import { Playlist } from "../../core/m3u8.js";
 import Storage from "../../core/utils/storage.js";
 export default {
   mounted() {
-    chrome.runtime.onInstalled.addListener((details) => {
-      localStorage.removeItem('history');
+    chrome.runtime.onInstalled.addListener(details => {
+      localStorage.removeItem("history");
     });
     chrome.runtime.onMessageExternal.addListener(function(
       message,
