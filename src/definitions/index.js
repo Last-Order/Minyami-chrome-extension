@@ -12,5 +12,6 @@ export const supportedSites = [
     "twitcasting.tv",
     "www.showroom-live.com",
     "hibiki-radio.jp",
-    "www.youtube.com"
+    "www.youtube.com",
+    "nogidoga.com",
 ];

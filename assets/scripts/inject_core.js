@@ -77,19 +77,30 @@
                 this.readyState === 4 &&
                 new URL(this.responseURL).pathname.endsWith("m3u8")
             ) {
+                let title;
+                switch (location.host) {
+                    case "nogidoga.com": {
+                        title = document.querySelector(".EpisodePage__Title")
+                            .innerText;
+                    }
+                }
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
                     chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                         type: "playlist",
                         content: this.responseText,
                         url: this.responseURL,
-                        title: document.title.replace(/[\/\*\\\:|\?<>]/gi, ""),
+                        title:
+                            title ||
+                            document.title.replace(/[\/\*\\\:|\?<>]/gi, ""),
                     });
                 } else {
                     chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
                         type: "chunklist",
                         content: this.responseText,
                         url: this.responseURL,
-                        title: document.title.replace(/[\/\*\\\:|\?<>]/gi, ""),
+                        title:
+                            title ||
+                            document.title.replace(/[\/\*\\\:|\?<>]/gi, ""),
                     });
                 }
                 // Execute after m3u8 loads
