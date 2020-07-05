@@ -1,7 +1,13 @@
 (async () => {
-    console.info(`Minyami Extractor inited.`);
     // const MINYAMI_EXTENSION_ID = navigator.userAgent.includes('Edg') ? "djgfdgeokfljmadfphgoemldapjilanp" : "cgejkofhdaffiifhcohjdbbheldkiaed";
-    const MINYAMI_EXTENSION_ID = "cgejkofhdaffiifhcohjdbbheldkiaed";
+    // const MINYAMI_EXTENSION_ID = "cgejkofhdaffiifhcohjdbbheldkiaed";
+    const MINYAMI_EXTENSION_ID = (await new Promise((res) => {
+        window.addEventListener('MinyamiExtId', res, false);
+        window.dispatchEvent(new CustomEvent('MinyamiReady'));
+    })).detail;
+    const notify = window.notifyMinyamiExtractor || ((msg) => // Firefox
+        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg) // Chromium
+    );
 
     let key = "";
     if (window.fetch) {
@@ -19,8 +25,7 @@
                             if (
                                 responseText.match(/#EXT-X-STREAM-INF/) !== null
                             ) {
-                                chrome.runtime.sendMessage(
-                                    MINYAMI_EXTENSION_ID,
+                                notify(
                                     {
                                         type: "playlist",
                                         content: responseText,
@@ -32,8 +37,7 @@
                                     }
                                 );
                             } else {
-                                chrome.runtime.sendMessage(
-                                    MINYAMI_EXTENSION_ID,
+                                notify(
                                     {
                                         type: "chunklist",
                                         content: responseText,
@@ -85,7 +89,7 @@
                     }
                 }
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
-                    chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+                    notify({
                         type: "playlist",
                         content: this.responseText,
                         url: this.responseURL,
@@ -94,7 +98,7 @@
                             document.title.replace(/[\/\*\\\:|\?<>]/gi, ""),
                     });
                 } else {
-                    chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+                    notify({
                         type: "chunklist",
                         content: this.responseText,
                         url: this.responseURL,
@@ -171,7 +175,7 @@
                         )
                         .join("");
                     if (key !== "00000000000000000000000000000000") {
-                        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+                        notify({
                             type: "key",
                             key: key,
                         });
@@ -190,7 +194,7 @@
                         : i.toString(16)
                 )
                 .join("");
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "key",
                 key: key,
             });
@@ -207,7 +211,7 @@
             if (websocketUrl.match(/audience_token=(.+)/)[1]) {
                 key = websocketUrl.match(/audience_token=(.+)/)[1];
             }
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "key",
                 key: key,
             });
@@ -215,13 +219,13 @@
     };
 
     const nicocas = () => {
-        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+        notify({
             type: "cookies",
             cookies:
                 "user_session=" +
                 document.cookie.match(/user_session\=(.+?)(;|$)/)[1],
         });
-        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+        notify({
             type: "key",
             key: `<CAS_MODE, ID=${location.href.match(/(lv\d+)/)[1]}>`,
         });
@@ -241,13 +245,13 @@
                         : i.toString(16)
                 )
                 .join("");
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "cookies",
                 cookies:
                     "licenseUID=" +
                     document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1],
             });
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "key",
                 key: key,
             });
@@ -268,13 +272,13 @@
                         : i.toString(16)
                 )
                 .join("");
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "cookies",
                 cookies:
                     "licenseUID=" +
                     document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1],
             });
-            chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+            notify({
                 type: "key",
                 key: key,
             });
@@ -282,7 +286,7 @@
     };
 
     const ch360 = (xhr) => {
-        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+        notify({
             type: "cookies",
             cookies:
                 "ch360pt=" + document.cookie.match(/ch360pt\=(.+?)(;|$)/)[1],
@@ -307,7 +311,7 @@
                 .hlsManifestUrl;
             await fetch(HlsManifestUrl);
         }
-        chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+        notify({
             type: "cookies",
             cookies: "PREF=" + document.cookie.match(/PREF\=(.+?)(;|$)/)[1],
         });
@@ -321,7 +325,7 @@
                     i.url.endsWith("chunklist.m3u8")
                 )
             ) {
-                chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, {
+                notify({
                     type: "playlist_chunklist",
                     content: xhr.responseText,
                     url: xhr.responseURL,

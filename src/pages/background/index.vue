@@ -9,7 +9,7 @@ export default {
     chrome.runtime.onInstalled.addListener(details => {
       localStorage.removeItem("history");
     });
-    chrome.runtime.onMessageExternal.addListener(function(
+    let processMessage = function(
       message,
       sender,
       sendResponse
@@ -59,7 +59,11 @@ export default {
           Storage.setHistory(sender.tab.url + "-cookies", message.cookies);
         }
       }
-    });
+    };
+    // Chromium
+    chrome.runtime.onMessageExternal.addListener(processMessage);
+    // Firefox
+    chrome.runtime.onMessage.addListener(processMessage);
     // 监视页面关闭
     const tabToUrl = {};
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
