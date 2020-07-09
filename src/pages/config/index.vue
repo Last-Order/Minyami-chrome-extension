@@ -19,16 +19,16 @@
     <el-card v-if="playlists.length === 0" shadow="never">
       <div style="text-align: center">"暂无数据"</div>
     </el-card>
-    <el-card v-if="showNoKeyWarning()" shadow="never">
+    <el-card v-if="noKey" shadow="never">
       <el-alert title="该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
-    <el-card v-if="showNoCookiesWarning()" shadow="never">
+    <el-card v-if="noCookies" shadow="never">
       <el-alert title="该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
     </el-card>
-    <el-card v-if="showCookieWarning()" shadow="never">
+    <el-card v-if="cookies.length > 0" shadow="never">
       <el-alert title="生成的命令包含您的 Cookies 请不要随意复制给他人" type="warning"></el-alert>
     </el-card>
-    <el-card v-if="showNotSupported()" shadow="never">
+    <el-card v-if="notSupported" shadow="never">
       <el-alert
         title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载"
         type="error"
@@ -114,21 +114,15 @@
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
-import { supportedSites } from "../../definitions";
-const needCookiesSites = ["360ch.tv"];
-const needKeySites = [
-  "abema.tv",
-  "live2.nicovideo.jp",
-  "dmm.com",
-  "dmm.co.jp",
-  "hibiki-radio.jp"
-];
 export default {
   data() {
     return {
       playlists: [],
       keys: [],
       cookies: [],
+      noKey: false,
+      noCookies: false,
+      notSupported: true,
       form: {
         recoverMode: false,
         live: false
@@ -137,28 +131,27 @@ export default {
         proxy: "",
         threads: ""
       },
-      currentUrl: "",
       showConfig: false
     };
   },
   mounted() {
     this.configForm.proxy = Storage.getConfig("proxy");
     this.configForm.threads = Storage.getConfig("threads");
-    setInterval(this.getKeys, 1000);
-    setInterval(this.getCookies, 1000);
-    setInterval(this.check, 1000);
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === "update_current") {
+        for (const entry of message.detail) {
+          // console.log(entry);
+          const key = Object.entries(entry)[0][0];
+          const value = Object.entries(entry)[0][1];
+          this[key] = value;
+        }
+      }
+    });
     this.check();
-    this.getKeys();
-    this.getCookies();
   },
   methods: {
     check() {
-      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (tabs[0]) {
-          this.playlists = Storage.getHistory(tabs[0].url);
-          this.currentUrl = tabs[0].url;
-        }
-      });
+      chrome.runtime.sendMessage({type: "query_current"})
     },
     generateCommand(chunklist, playlist) {
       const prefix = "minyami";
@@ -189,65 +182,6 @@ export default {
       const input = this.$refs[chunkList.url];
       input[0].select();
       document.execCommand("copy");
-    },
-    getKeys() {
-      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (tabs[0]) {
-          const keys = Storage.getHistory(tabs[0].url + "-key");
-          if (keys && keys.length > 0) {
-            this.keys = keys;
-          }
-        }
-      });
-    },
-    getCookies() {
-      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (tabs[0]) {
-          const cookies = Storage.getHistory(tabs[0].url + "-cookies");
-          if (cookies && cookies.length > 0) {
-            this.cookies = cookies;
-          }
-        }
-      });
-    },
-    showNoKeyWarning() {
-      if (!this.currentUrl) {
-        return false;
-      }
-      for (const site of needKeySites) {
-        if (this.currentUrl.includes(site) && this.keys.length === 0) {
-          return true;
-        }
-      }
-      return false;
-    },
-    showNoCookiesWarning() {
-      if (!this.currentUrl) {
-        return false;
-      }
-      for (const site of needCookiesSites) {
-        if (this.currentUrl.includes(site) && this.cookies.length === 0) {
-          return true;
-        }
-      }
-      return false;
-    },
-    showCookieWarning() {
-      if (!this.currentUrl) {
-        return false;
-      }
-      for (const site of needCookiesSites) {
-        if (this.currentUrl.includes(site) && this.cookies.length === 0) {
-          return true;
-        }
-      }
-      return false;
-    },
-    showNotSupported() {
-      return (
-        !this.currentUrl ||
-        !supportedSites.includes(new URL(this.currentUrl).host)
-      );
     },
     saveConfig() {
       const proxy = this.configForm.proxy;
