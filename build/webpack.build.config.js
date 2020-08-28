@@ -36,9 +36,14 @@ const generateConfig = (input) => {
             new CleanWebpackPlugin({
                 verbose: true
             }),
-            new CopyWebpackPlugin([{
-                from: path.resolve(__dirname, '../assets/**/*'), to: path.resolve(__dirname, '../dist/'),
-            }]),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {
+                        from: path.resolve(__dirname, "../assets/"),
+                        to: path.resolve(__dirname, "../dist/assets"),
+                    },
+                ],
+            }),
             new ExtractTextPlugin("[name].css"),
             ...generateHTMLPluginConf(input),
             {

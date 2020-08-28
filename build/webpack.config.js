@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const WriteFilePlugin = require("write-file-webpack-plugin");
 
 const generateHTMLPluginConf = (input) => {
     const result = [];
@@ -38,15 +39,18 @@ const generateConfig = (input) => {
             extensions: [".js", ".vue"],
         },
         plugins: [
+            new WriteFilePlugin(),
             new CleanWebpackPlugin({
                 verbose: true,
             }),
-            new CopyWebpackPlugin([
-                {
-                    from: path.resolve(__dirname, "../assets/**/*"),
-                    to: path.resolve(__dirname, "../dist/"),
-                },
-            ]),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {
+                        from: path.resolve(__dirname, "../assets/"),
+                        to: path.resolve(__dirname, "../dist/assets"),
+                    },
+                ],
+            }),
             new ExtractTextPlugin("[name].css"),
             ...generateHTMLPluginConf(input),
             {

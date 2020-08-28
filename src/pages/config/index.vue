@@ -1,36 +1,39 @@
 <template>
   <div class="main-container">
     <div>
-      <el-button type="text" @click="showConfig = true">设置</el-button>
+      <div class="buttons">
+        <el-button type="text" @click="showConfig = true">{{ $t("message.settings") }}</el-button>
+        <el-button type="text" @click="changeLanguage">{{ $i18n.locale === 'en' ? '中文' : 'English' }}</el-button>
+      </div>
       <el-card v-if="showConfig" class="config-container" shadow="never">
         <el-form>
-          <el-form-item label="代理">
+          <el-form-item :label="$t('message.proxy')">
             <el-input v-model="configForm.proxy"></el-input>
           </el-form-item>
-          <el-form-item label="并发数量">
+          <el-form-item :label="$t('message.threads')">
             <el-input v-model="configForm.threads"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button @click="saveConfig">保存</el-button>
+            <el-button @click="saveConfig">{{ $t("message.save") }}</el-button>
           </el-form-item>
         </el-form>
       </el-card>
     </div>
     <el-card v-if="playlists.length === 0" shadow="never">
-      <div style="text-align: center">"暂无数据"</div>
+      <div style="text-align: center">{{ $t("message.noData") }}</div>
     </el-card>
     <el-card v-if="showNoKeyWarning()" shadow="never">
-      <el-alert title="该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
+      <el-alert :title="$t('message.noKeyWarning')" type="error"></el-alert>
     </el-card>
     <el-card v-if="showNoCookiesWarning()" shadow="never">
-      <el-alert title="该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试" type="error"></el-alert>
+      <el-alert :title="$t('message.noCookieWarning')" type="error"></el-alert>
     </el-card>
     <el-card v-if="showCookieWarning()" shadow="never">
-      <el-alert title="生成的命令包含您的 Cookies 请不要随意复制给他人" type="warning"></el-alert>
+      <el-alert :title="$t('message.cookieWarning')" type="warning"></el-alert>
     </el-card>
     <el-card v-if="showNotSupported()" shadow="never">
       <el-alert
-        title="Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载"
+        :title="$t('message.unsupportedTip')"
         type="error"
       ></el-alert>
     </el-card>
@@ -41,10 +44,10 @@
         </div>
         <el-form :inline="true">
           <el-form-item>
-            <el-checkbox v-model="form.recoverMode" label="恢复模式"></el-checkbox>
+            <el-checkbox v-model="form.recoverMode" :label="$t('message.resumeMode')"></el-checkbox>
           </el-form-item>
           <el-form-item>
-            <el-checkbox v-model="form.live" label="下载直播"></el-checkbox>
+            <el-checkbox v-model="form.live" :label="$t('message.liveMode')"></el-checkbox>
           </el-form-item>
         </el-form>
         <template v-for="(chunkList) in playlist.chunkLists">
@@ -52,17 +55,17 @@
             <el-form-item>
               <div class="playlist-chunklist-item-info">
                 <template v-if="chunkList.type === 'video'">
-                  <el-tag type="info" size="mini" class="playlist-tag">视频</el-tag>
+                  <el-tag type="info" size="mini" class="playlist-tag">{{ $t("message.video") }}</el-tag>
                   <span
                     v-if="chunkList.resolution"
-                  >分辨率：{{chunkList.resolution.x}} × {{chunkList.resolution.y}}</span>
+                  >{{ $t("message.resolution") }}: {{chunkList.resolution.x}} × {{chunkList.resolution.y}}</span>
                   <span
                     v-if="chunkList.bandwidth"
-                  >码率：{{Math.round(chunkList.bandwidth / 1024)}} kbps</span>
+                  >{{ $t("message.bitrate") }}: {{Math.round(chunkList.bandwidth / 1024)}} kbps</span>
                 </template>
                 <template v-if="chunkList.type === 'audio'">
-                  <el-tag type="info" size="mini" class="playlist-tag">音频</el-tag>
-                  <span>{{ chunkList.name && ` 名称：${chunkList.name}` }}</span>
+                  <el-tag type="info" size="mini" class="playlist-tag">{{ $t("message.audio") }}</el-tag>
+                  <span>{{ chunkList.name && ` ${$t('message.trackName')}: ${chunkList.name}` }}</span>
                 </template>
               </div>
             </el-form-item>
@@ -75,7 +78,7 @@
             </el-form-item>
             <el-form-item>
               <div>
-                <el-button size="small" @click="copy(chunkList)">复制</el-button>
+                <el-button size="small" @click="copy(chunkList)">{{ $t("message.copy") }}</el-button>
               </div>
             </el-form-item>
           </el-form>
@@ -88,6 +91,10 @@
 .main-container {
   min-width: 600px;
   min-height: 600px;
+}
+.buttons {
+  display: flex;
+  justify-content: space-between;
 }
 .config-container {
   margin: 1rem auto;
@@ -261,6 +268,11 @@ export default {
       Storage.setConfig("proxy", proxy);
       Storage.setConfig("threads", threads);
       this.showConfig = false;
+    },
+    changeLanguage() {
+      const targetLanguage = this.$i18n.locale === 'en' ? 'zh_CN' : 'en';
+      Storage.setConfig("language", targetLanguage);
+      this.$i18n.locale = targetLanguage;
     }
   }
 };
