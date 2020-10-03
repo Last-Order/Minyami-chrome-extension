@@ -22,6 +22,10 @@
                     .then(async (r) => {
                         if (r.url.includes("m3u8")) {
                             const responseText = await r.text();
+                            let title = document.title.replace(
+                                /[\/\*\\\:|\?<>]/gi,
+                                ""
+                            );
                             if (
                                 responseText.match(/#EXT-X-STREAM-INF/) !== null
                             ) {
@@ -30,10 +34,7 @@
                                         type: "playlist",
                                         content: responseText,
                                         url: r.url,
-                                        title: document.title.replace(
-                                            /[\/\*\\\:|\?<>]/gi,
-                                            ""
-                                        ),
+                                        title,
                                     }
                                 );
                             } else {
@@ -42,12 +43,14 @@
                                         type: "chunklist",
                                         content: responseText,
                                         url: r.url,
-                                        title: document.title.replace(
-                                            /[\/\*\\\:|\?<>]/gi,
-                                            ""
-                                        ),
+                                        title,
                                     }
                                 );
+                            }
+                            switch (location.host) {
+                                case 'tif.spwn.jp': {
+                                    tif();
+                                }
                             }
                         }
                     })
@@ -119,6 +122,10 @@
                     }
                     case "www.dmm.co.jp": {
                         dmm_r18(this);
+                        break;
+                    }
+                    case "tif.spwn.jp": {
+                        tif(this);
                         break;
                     }
                 }
@@ -230,6 +237,19 @@
             key: `<CAS_MODE, ID=${location.href.match(/(lv\d+)/)[1]}>`,
         });
     };
+
+    const tif = () => {
+        notify({
+            type: "cookies",
+            cookies:
+                "CloudFront-Policy=" +
+                document.cookie.match(/CloudFront-Policy\=(.+?)(;|$)/)[1] + '; ' +
+                "CloudFront-Signature=" + 
+                document.cookie.match(/CloudFront-Signature\=(.+?)(;|$)/)[1] + '; ' + 
+                "CloudFront-Key-Pair-Id=" + 
+                document.cookie.match(/CloudFront-Key-Pair-Id\=(.+?)(;|$)/)[1] + '; '
+        });
+    }
 
     const dmm = (xhr) => {
         if (
@@ -347,6 +367,7 @@
             }
         }
     };
+
 
     // Execute when load
     switch (location.host) {

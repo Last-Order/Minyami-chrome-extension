@@ -14,4 +14,5 @@ export const supportedSites = [
     "hibiki-radio.jp",
     "www.youtube.com",
     "nogidoga.com",
+    "tif.spwn.jp"
 ];

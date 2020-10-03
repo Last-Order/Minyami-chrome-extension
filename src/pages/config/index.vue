@@ -179,7 +179,7 @@ export default {
         command += ` --key "${this.keys[0]}"`;
       }
       if (this.cookies.length > 0) {
-        command += ` --cookies "${this.cookies[0]}"`;
+        command += ` --headers "Cookie: ${this.cookies[0]}"`;
       }
       if (this.form.live) {
         command += ` --live`;
