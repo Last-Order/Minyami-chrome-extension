@@ -1,7 +1,7 @@
 export default {
     message: {
         settings: "设置",
-        proxy: "代理",
+        proxy: "代理 (已弃用)",
         threads: "并发数量",
         save: "保存",
         noData: "\"暂无数据\"",

@@ -171,9 +171,9 @@ export default {
       const prefix = "minyami";
       let command = "";
       if (!this.form.recoverMode) {
-        command += `${prefix} -d '"${chunklist.url}"' --output "${playlist.title}.ts"`;
+        command += `${prefix} -d "${chunklist.url}" --output "${playlist.title}.ts"`;
       } else {
-        command += `${prefix} -r '"${chunklist.url}"'`;
+        command += `${prefix} -r "${chunklist.url}"`;
       }
       if (this.keys.length > 0) {
         command += ` --key "${this.keys[0]}"`;

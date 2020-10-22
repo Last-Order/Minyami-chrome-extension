@@ -1,7 +1,7 @@
 export default {
     message: {
         settings: "Settings",
-        proxy: "Proxy",
+        proxy: "Proxy (Deprecated)",
         threads: "Threads",
         save: "Save",
         noData: "\"No Data\"",
