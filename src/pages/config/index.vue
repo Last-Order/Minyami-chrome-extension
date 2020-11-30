@@ -7,9 +7,6 @@
       </div>
       <el-card v-if="showConfig" class="config-container" shadow="never">
         <el-form>
-          <el-form-item :label="$t('message.proxy')">
-            <el-input v-model="configForm.proxy"></el-input>
-          </el-form-item>
           <el-form-item :label="$t('message.threads')">
             <el-input v-model="configForm.threads"></el-input>
           </el-form-item>
@@ -141,7 +138,6 @@ export default {
         live: false
       },
       configForm: {
-        proxy: "",
         threads: ""
       },
       currentUrl: "",
@@ -149,7 +145,6 @@ export default {
     };
   },
   mounted() {
-    this.configForm.proxy = Storage.getConfig("proxy");
     this.configForm.threads = Storage.getConfig("threads");
     setInterval(this.getKeys, 1000);
     setInterval(this.getCookies, 1000);
@@ -186,9 +181,6 @@ export default {
       }
       if (Storage.getConfig("threads")) {
         command += ` --threads ${Storage.getConfig("threads")}`;
-      }
-      if (Storage.getConfig("proxy")) {
-        command += ` --proxy "${Storage.getConfig("proxy")}"`;
       }
       return command;
     },
@@ -257,15 +249,7 @@ export default {
       );
     },
     saveConfig() {
-      const proxy = this.configForm.proxy;
       const threads = this.configForm.threads;
-      // if (!Number.isInteger(parseInt(threads)) || parseInt(threads) <= 0) {
-      //   return this.$message({
-      //     type: 'error',
-      //     message: '并发数必须是正整数'
-      //   })
-      // }
-      Storage.setConfig("proxy", proxy);
       Storage.setConfig("threads", threads);
       this.showConfig = false;
     },
