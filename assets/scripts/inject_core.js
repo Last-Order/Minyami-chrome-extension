@@ -124,8 +124,8 @@
                         dmm_r18(this);
                         break;
                     }
-                    case "tif.spwn.jp": {
-                        tif(this);
+                    case "spwn.jp": {
+                        spwn(this);
                         break;
                     }
                 }
@@ -238,7 +238,7 @@
         });
     };
 
-    const tif = () => {
+    const spwn = () => {
         notify({
             type: "cookies",
             cookies:
