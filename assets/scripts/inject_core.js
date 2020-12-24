@@ -325,9 +325,9 @@
     };
 
     const youtube = async () => {
-        const playerResponse = ytplayer.config.args.player_response;
+        const playerResponse = ytplayer.config.args.raw_player_response;
         if (playerResponse) {
-            const HlsManifestUrl = JSON.parse(playerResponse).streamingData
+            const HlsManifestUrl = playerResponse.streamingData
                 .hlsManifestUrl;
             await fetch(HlsManifestUrl);
         }
