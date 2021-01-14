@@ -48,8 +48,8 @@
                                 );
                             }
                             switch (location.host) {
-                                case 'tif.spwn.jp': {
-                                    tif();
+                                case 'spwn.jp': {
+                                    spwn();
                                 }
                             }
                         }
