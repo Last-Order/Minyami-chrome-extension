@@ -4,7 +4,7 @@ export default {
         proxy: "代理 (已弃用)",
         threads: "并发数量",
         save: "保存",
-        noData: "\"暂无数据\"",
+        noData: '"暂无数据"',
         noKeyWarning: "该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试",
         noCookieWarning: "该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试",
         cookieWarning: "生成的命令包含您的 Cookies 请不要随意复制给他人",
@@ -16,6 +16,7 @@ export default {
         resolution: "分辨率",
         bitrate: "码率",
         trackName: "名称",
-        copy: "复制"
+        copy: "复制",
+        require: "需要"
     }
-}
+};

@@ -14,7 +14,7 @@ export default {
       sender,
       sendResponse
     ) {
-      // console.log(message);
+      console.log(message);
       if (message.type === "playlist") {
         const playlist = new Playlist(
           message.content,
@@ -28,7 +28,6 @@ export default {
         }
       }
       if (message.type === "playlist_chunklist") {
-        console.log(message);
         const playlist = new Playlist(
           message.content,
           message.url,
@@ -36,7 +35,6 @@ export default {
           true
         );
         playlist.chunkLists = message.chunkLists;
-        console.log(playlist);
         if (
           !Storage.getHistory(sender.tab.url).some(p => p.url === playlist.url)
         ) {
