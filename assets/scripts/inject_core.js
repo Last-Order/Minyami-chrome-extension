@@ -363,11 +363,12 @@
             }
         }
         if (chunkLists.length > 0) {
+            const roomTitle = __NEPTUNE_IS_MY_WAIFU__?.roomInfoRes?.data?.room_info?.title || document.title;
             notify({
                 type: "playlist_chunklist",
                 content: "",
                 url: location.href,
-                title: escapeFilename(document.title),
+                title: escapeFilename(roomTitle),
                 chunkLists
             });
         }
