@@ -283,7 +283,6 @@
                     chunkLists: [
                         {
                             type: "video",
-
                             resolution: {
                                 x: "Unknown",
                                 y: "Unknown"
@@ -336,6 +335,46 @@
         }
     };
 
+    const bilibili = async () => {
+        if (!location.href.match(/live.bilibili.com\/(\d+)/)) {
+            return;
+        }
+        const roomId = location.href.match(/live.bilibili.com\/(\d+)/)[1];
+        const api = `https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=${roomId}&protocol=0,1&format=0,1,2&codec=0,1,2&qn=10000&platform=web&ptype=16`;
+        const roomLiveInfo = await (await fetch(api)).json();
+        if (!roomLiveInfo?.data?.playurl_info?.playurl?.stream) {
+            return;
+        }
+        const hlsInfo = roomLiveInfo.data.playurl_info.playurl.stream.find((i) => i.protocol_name === "http_hls");
+        const streamFormats = hlsInfo.format;
+        const chunkLists = [];
+        for (const format of streamFormats) {
+            const codec = format.codec[0];
+            if (codec.url_info[0].host && codec.base_url) {
+                chunkLists.push({
+                    type: "video",
+                    resolution: {
+                        x: "Unknown",
+                        y: "Unknown"
+                    },
+                    url: codec.url_info[0].host + codec.base_url + (codec.url_info[0].extra || ""),
+                    ...(format.format_name !== "ts" ? { minimumMinyamiVersion: "4.1.0" } : {})
+                });
+            }
+        }
+        if (chunkLists.length > 0) {
+            notify({
+                type: "playlist_chunklist",
+                content: "",
+                url: location.href,
+                title: escapeFilename(document.title),
+                chunkLists
+            });
+        }
+    };
+
+    window.bilibili = bilibili;
+
     // Execute when load
     switch (location.host) {
         case "abema.tv": {
@@ -360,6 +399,10 @@
         }
         case "www.youtube.com": {
             youtube();
+            break;
+        }
+        case "live.bilibili.com": {
+            bilibili();
             break;
         }
     }

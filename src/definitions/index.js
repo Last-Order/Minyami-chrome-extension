@@ -16,4 +16,5 @@ export const supportedSites = [
     "nogidoga.com",
     "stagecrowd.live",
     "spwn.jp",
+    "live.bilibili.com"
 ];
