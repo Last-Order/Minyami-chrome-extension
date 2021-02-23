@@ -1,5 +1,4 @@
 export const supportedSites = [
-    "freshlive.tv",
     "www.openrec.tv",
     "abema.tv",
     "live2.nicovideo.jp",

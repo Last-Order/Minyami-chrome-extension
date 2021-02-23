@@ -19,7 +19,6 @@
         "tabs",
         "storage",
         "webRequest",
-        "https://freshlive.tv/*",
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
         "https://abema.tv/video/*",
@@ -44,7 +43,6 @@
     "content_scripts": [
         {
             "matches": [
-                "https://freshlive.tv/*",
                 "https://www.openrec.tv/*",
                 "https://abema.tv/channels/*/slots/*",
                 "https://abema.tv/video/*",
@@ -73,7 +71,6 @@
     "web_accessible_resources": ["/assets/scripts/inject_core.js"],
     "externally_connectable": {
         "matches": [
-            "https://freshlive.tv/*",
             "https://www.openrec.tv/*",
             "https://abema.tv/channels/*/slots/*",
             "https://abema.tv/video/*",
