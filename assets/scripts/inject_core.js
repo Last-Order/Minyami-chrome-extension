@@ -79,6 +79,9 @@
                     case "nogidoga.com": {
                         title = escapeFilename(document.querySelector(".EpisodePage__Title").innerText);
                     }
+                    case "www.dmm.co.jp": {
+                        title = escapeFilename(document.querySelector('.title')?.innerText);
+                    }
                 }
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
                     notify({
@@ -242,7 +245,7 @@
     };
 
     const dmm_r18 = (xhr) => {
-        if (xhr.readyState === 4 && xhr.responseURL.startsWith("https://www.dmm.co.jp/service/-/drm_iphone")) {
+        if (xhr.readyState === 4 && (xhr.responseURL.startsWith("https://www.dmm.co.jp/service/-/drm_iphone") || xhr.responseURL.startsWith("https://mlic.dmm.co.jp/drm/hlsaes/key/"))) {
             const key = Array.from(new Uint8Array(xhr.response))
                 .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
                 .join("");
