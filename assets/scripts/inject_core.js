@@ -78,9 +78,11 @@
                 switch (location.host) {
                     case "nogidoga.com": {
                         title = escapeFilename(document.querySelector(".EpisodePage__Title").innerText);
+                        break;
                     }
                     case "www.dmm.co.jp": {
                         title = escapeFilename(document.querySelector('.title')?.innerText);
+                        break;
                     }
                 }
                 if (this.responseText.match(/#EXT-X-STREAM-INF/) !== null) {
