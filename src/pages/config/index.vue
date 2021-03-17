@@ -133,7 +133,7 @@
 import Storage from "../../core/utils/storage.js";
 import { supportedSites } from "../../definitions";
 const needCookiesSites = ["360ch.tv"];
-const needKeySites = ["abema.tv", "live2.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
+const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
 export default {
     data() {
         return {

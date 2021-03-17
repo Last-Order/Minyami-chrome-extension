@@ -106,6 +106,10 @@
                         nico();
                         break;
                     }
+                    case "live.nicovideo.jp": {
+                        nico();
+                        break;
+                    }
                     case "www.dmm.com": {
                         dmm(this);
                         break;

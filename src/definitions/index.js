@@ -2,6 +2,7 @@ export const supportedSites = [
     "www.openrec.tv",
     "abema.tv",
     "live2.nicovideo.jp",
+    "live.nicovideo.jp",
     "cas.nicovideo.jp",
     "gyao.yahoo.co.jp",
     "www.dmm.com",
