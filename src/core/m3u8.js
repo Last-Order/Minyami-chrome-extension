@@ -32,7 +32,7 @@ export class Playlist {
                 const chunkList = {
                     type: 'audio'
                 };
-                chunkList.url = line.match(/URI="(.+?)"/)[1];
+                chunkList.url = CommonUtils.buildFullUrl(this.url, line.match(/URI="(.+?)"/)[1]);
                 chunkList.name = line.match(/NAME="(.+?)"/) && line.match(/NAME="(.+?)"/)[1];
                 this.chunkLists.push(chunkList);
             }
