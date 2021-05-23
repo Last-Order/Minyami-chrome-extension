@@ -360,30 +360,11 @@
         for (const format of streamFormats) {
             const codec = format.codec[0];
             if (codec.url_info[0].host && codec.base_url) {
-                chunkLists.push({
-                    type: "video",
-                    resolution: {
-                        x: "Unknown",
-                        y: "Unknown"
-                    },
-                    url: codec.url_info[0].host + codec.base_url + (codec.url_info[0].extra || ""),
-                    ...(format.format_name !== "ts" ? { minimumMinyamiVersion: "4.1.0" } : {})
-                });
+                const chunkListUrl = codec.url_info[0].host + codec.base_url + (codec.url_info[0].extra || "");
+                fetch(chunkListUrl)
             }
         }
-        if (chunkLists.length > 0) {
-            const roomTitle = __NEPTUNE_IS_MY_WAIFU__?.roomInfoRes?.data?.room_info?.title || document.title;
-            notify({
-                type: "playlist_chunklist",
-                content: "",
-                url: location.href,
-                title: escapeFilename(roomTitle),
-                chunkLists
-            });
-        }
     };
-
-    window.bilibili = bilibili;
 
     // Execute when load
     switch (location.host) {
