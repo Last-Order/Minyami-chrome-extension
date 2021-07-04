@@ -30,13 +30,22 @@
         <el-card v-if="showCookieWarning()" shadow="never">
             <el-alert :title="$t('message.cookieWarning')" type="warning"></el-alert>
         </el-card>
+        <el-card v-if="showMinyamiVersionRequirementTip()" shadow="never">
+            <el-alert
+                :title="$t('message.minyamiVersionRequirementTip', { version: showMinyamiVersionRequirementTip() })"
+                type="warning"
+            ></el-alert>
+        </el-card>
         <el-card v-if="showNotSupported()" shadow="never">
             <el-alert :title="$t('message.unsupportedTip')" type="error"></el-alert>
         </el-card>
-        <el-card class="playlist-item" v-for="playlist in playlists" :key="playlist.url" shadow="never">
+        <el-card class="playlist-item" v-for="(playlist, index) in playlists" :key="playlist.url" shadow="never">
             <div>
                 <div :title="playlist.url" class="playlist-item-playlist-url">
                     <span>{{ playlist.url }}</span>
+                </div>
+                <div v-if="playlist.streamName" class="playlist-item-playlist-streamName">
+                    {{ playlist.streamName }}
                 </div>
                 <el-form :inline="true">
                     <el-form-item>
@@ -82,7 +91,7 @@
                         <el-form-item class="playlist-chunklist-command">
                             <el-input
                                 size="mini"
-                                :value="generateCommand(chunkList, playlist)"
+                                :value="generateCommand(chunkList, playlist, index)"
                                 :ref="chunkList.url"
                             ></el-input>
                         </el-form-item>
@@ -113,6 +122,10 @@
     margin: 1rem 0;
     max-width: 600px;
 }
+.playlist-item-playlist-streamName {
+    margin: 8px 0;
+    color: #aaa;
+}
 .playlist-item-playlist-url {
     text-overflow: ellipsis;
     overflow: hidden;
@@ -131,7 +144,7 @@
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
-import { supportedSites } from "../../definitions";
+import { supportedSites, minyamiVersionRequirementMap } from "../../definitions";
 const needCookiesSites = ["360ch.tv"];
 const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
 export default {
@@ -162,14 +175,14 @@ export default {
     },
     methods: {
         check() {
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs[0]) {
                     this.playlists = Storage.getHistory(tabs[0].url);
                     this.currentUrl = tabs[0].url;
                 }
             });
         },
-        generateCommand(chunklist, playlist) {
+        generateCommand(chunklist, playlist, index) {
             const prefix = "minyami";
             let command = "";
             if (!this.form.recoverMode) {
@@ -178,10 +191,10 @@ export default {
                 command += `${prefix} -r "${chunklist.url}"`;
             }
             if (this.keys.length > 0) {
-                command += ` --key "${this.keys[0]}"`;
+                command += ` --key "${this.keys[index] || this.keys[0]}"`;
             }
             if (this.cookies.length > 0) {
-                command += ` --headers "Cookie: ${this.cookies[0]}"`;
+                command += ` --headers "Cookie: ${this.cookies[index] || this.cookies[0]}"`;
             }
             if (this.form.live) {
                 command += ` --live`;
@@ -197,7 +210,7 @@ export default {
             document.execCommand("copy");
         },
         getKeys() {
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs[0]) {
                     const keys = Storage.getHistory(tabs[0].url + "-key");
                     if (keys && keys.length > 0) {
@@ -207,7 +220,7 @@ export default {
             });
         },
         getCookies() {
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs[0]) {
                     const cookies = Storage.getHistory(tabs[0].url + "-cookies");
                     if (cookies && cookies.length > 0) {
@@ -251,6 +264,13 @@ export default {
         },
         showNotSupported() {
             return !this.currentUrl || !supportedSites.includes(new URL(this.currentUrl).host);
+        },
+        showMinyamiVersionRequirementTip() {
+            const host = new URL(this.currentUrl).host;
+            if (Object.keys(minyamiVersionRequirementMap).includes(host)) {
+                return minyamiVersionRequirementMap[host];
+            }
+            return null;
         },
         saveConfig() {
             const threads = this.configForm.threads;

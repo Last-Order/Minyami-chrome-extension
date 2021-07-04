@@ -18,3 +18,7 @@ export const supportedSites = [
     "spwn.jp",
     "live.bilibili.com"
 ];
+export const minyamiVersionRequirementMap = {
+    "live.nicovideo.jp": "4.2.5",
+    "live.bilibili.com": "4.2.4"
+};

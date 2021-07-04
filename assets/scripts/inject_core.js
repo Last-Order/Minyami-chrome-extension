@@ -25,12 +25,23 @@
                         if (r.url.includes("m3u8")) {
                             const responseText = await r.text();
                             let title = escapeFilename(document.title);
+                            let streamName;
+                            switch (location.host) {
+                                case "abema.tv": {
+                                    if (document.querySelector(".c-tv-SwitchAngleButton-current-angle-name")) {
+                                        streamName = document.querySelector(
+                                            ".c-tv-SwitchAngleButton-current-angle-name"
+                                        ).innerText;
+                                    }
+                                }
+                            }
                             if (responseText.match(/#EXT-X-STREAM-INF/) !== null) {
                                 notify({
                                     type: "playlist",
                                     content: responseText,
                                     url: r.url,
-                                    title
+                                    title,
+                                    streamName
                                 });
                             } else {
                                 notify({
@@ -81,7 +92,7 @@
                         break;
                     }
                     case "www.dmm.co.jp": {
-                        title = escapeFilename(document.querySelector('.title')?.innerText);
+                        title = escapeFilename(document.querySelector(".title")?.innerText);
                         break;
                     }
                 }
@@ -137,9 +148,6 @@
                 case "www.360ch.tv": {
                     ch360(this);
                     break;
-                }
-                case "cas.nicovideo.jp": {
-                    nicocas(this);
                 }
                 case "hibiki-radio.jp": {
                     hibiki(this);
@@ -200,22 +208,14 @@
             if (websocketUrl.match(/audience_token=(.+)/)[1]) {
                 key = websocketUrl.match(/audience_token=(.+)/)[1];
             }
+            if (liveData.program?.stream?.maxQuality) {
+                key += `,${liveData.program.stream.maxQuality}`;
+            }
             notify({
                 type: "key",
                 key: key
             });
         } catch {}
-    };
-
-    const nicocas = () => {
-        notify({
-            type: "cookies",
-            cookies: "user_session=" + document.cookie.match(/user_session\=(.+?)(;|$)/)[1]
-        });
-        notify({
-            type: "key",
-            key: `<CAS_MODE, ID=${location.href.match(/(lv\d+)/)[1]}>`
-        });
     };
 
     const spwn = () => {
@@ -251,7 +251,11 @@
     };
 
     const dmm_r18 = (xhr) => {
-        if (xhr.readyState === 4 && (xhr.responseURL.startsWith("https://www.dmm.co.jp/service/-/drm_iphone") || xhr.responseURL.startsWith("https://mlic.dmm.co.jp/drm/hlsaes/key/"))) {
+        if (
+            xhr.readyState === 4 &&
+            (xhr.responseURL.startsWith("https://www.dmm.co.jp/service/-/drm_iphone") ||
+                xhr.responseURL.startsWith("https://mlic.dmm.co.jp/drm/hlsaes/key/"))
+        ) {
             const key = Array.from(new Uint8Array(xhr.response))
                 .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
                 .join("");
@@ -361,7 +365,7 @@
             const codec = format.codec[0];
             if (codec.url_info[0].host && codec.base_url) {
                 const chunkListUrl = codec.url_info[0].host + codec.base_url + (codec.url_info[0].extra || "");
-                fetch(chunkListUrl)
+                fetch(chunkListUrl);
             }
         }
     };
