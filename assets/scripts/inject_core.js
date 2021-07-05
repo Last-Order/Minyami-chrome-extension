@@ -9,7 +9,7 @@
             msg // Firefox
         ) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg)); // Chromium
     const escapeFilename = (filename) => {
-        return filename.replace(/[\/\*\\\:|\?<>]/gi, "").replace(/"/gi, "\\");
+        return filename.replace(/[\/\*\\\:|\?<>"]/gi, "");
     };
     let key = "";
     if (window.fetch) {
