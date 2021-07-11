@@ -2,23 +2,20 @@
     "name": "Minyami",
     "version": "1.2.2",
     "author": "Eridanus Sora",
-    "manifest_version": 2,
+    "manifest_version": 3,
     "description": "Minyami Chrome Extension",
-    "browser_action": {
+    "action": {
         "default_popup": "./config/index.html",
         "default_title": "查看当前流"
     },
     "background": {
-        "page": "./background/index.html",
-        "persistent": true
+        "service_worker": "./background.js"
     },
     "icons": {
         "128": "assets/logo.png"
     },
-    "permissions": [
-        "tabs",
-        "storage",
-        "webRequest",
+    "permissions": ["tabs", "storage", "webRequest"],
+    "host_permissions": [
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
         "https://abema.tv/video/*",
@@ -72,7 +69,12 @@
             "js": ["./assets/scripts/inject.js"]
         }
     ],
-    "web_accessible_resources": ["/assets/scripts/inject_core.js"],
+    "web_accessible_resources": [
+        {
+            "resources": ["/assets/scripts/inject_core.js"],
+            "matches": ["*://*/*"]
+        }
+    ],
     "externally_connectable": {
         "matches": [
             "https://www.openrec.tv/*",

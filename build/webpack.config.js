@@ -13,7 +13,7 @@ const generateHTMLPluginConf = (input) => {
             new HtmlWebpackPlugin({
                 filename: path.resolve(__dirname, `../dist/${file}/index.html`),
                 template: path.resolve(__dirname, "../src/index.html"),
-                chunks: ["vendors", input[file]["output"]],
+                chunks: ["vendors", input[file]["output"]]
             })
         );
     }
@@ -23,10 +23,7 @@ const generateHTMLPluginConf = (input) => {
 const generateEntries = (input) => {
     const result = {};
     for (const file of Object.keys(input)) {
-        result[input[file]["output"]] = path.resolve(
-            __dirname,
-            `../src/${input[file]["input"]}`
-        );
+        result[input[file]["output"]] = path.resolve(__dirname, `../src/${input[file]["input"]}`);
     }
     return result;
 };
@@ -34,22 +31,23 @@ const generateEntries = (input) => {
 const generateConfig = (input) => {
     return {
         mode: "production",
+        devtool: "source-map",
         entry: generateEntries(input),
         resolve: {
-            extensions: [".js", ".vue"],
+            extensions: [".js", ".vue"]
         },
         plugins: [
             new WriteFilePlugin(),
             new CleanWebpackPlugin({
-                verbose: true,
+                verbose: true
             }),
             new CopyWebpackPlugin({
                 patterns: [
                     {
                         from: path.resolve(__dirname, "../assets/"),
-                        to: path.resolve(__dirname, "../dist/assets"),
-                    },
-                ],
+                        to: path.resolve(__dirname, "../dist/assets")
+                    }
+                ]
             }),
             new ExtractTextPlugin("[name].css"),
             ...generateHTMLPluginConf(input),
@@ -57,18 +55,14 @@ const generateConfig = (input) => {
                 apply: (compiler) => {
                     compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
                         console.log("Write manifest");
-                        const manifest = JSON.parse(
-                            fs.readFileSync(
-                                path.resolve(__dirname, "../manifest.json")
-                            )
-                        );
+                        const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../manifest.json")));
                         fs.writeFileSync(
                             path.resolve(__dirname, "../dist/manifest.json"),
                             JSON.stringify(manifest, null, 2)
                         );
                     });
-                },
-            },
+                }
+            }
         ],
         module: {
             rules: [
@@ -76,22 +70,22 @@ const generateConfig = (input) => {
                     test: /\.vue$/,
                     loader: "vue-loader",
                     options: {
-                        extractCSS: true,
-                    },
+                        extractCSS: true
+                    }
                 },
                 {
                     test: /\.css$/,
-                    loader: "style-loader!css-loader",
+                    loader: "style-loader!css-loader"
                 },
                 {
                     test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-                    loader: "url-loader",
-                },
-            ],
+                    loader: "url-loader"
+                }
+            ]
         },
         output: {
             filename: "[name].js",
-            path: path.resolve(__dirname, `../dist/`),
+            path: path.resolve(__dirname, `../dist/`)
         },
         optimization: {
             splitChunks: {
@@ -99,12 +93,12 @@ const generateConfig = (input) => {
                     commons: {
                         test: /[\\/]node_modules[\\/]/,
                         name: "vendors",
-                        chunks: "all",
-                    },
+                        chunks: "all"
+                    }
                 },
-                name: true,
-            },
-        },
+                name: true
+            }
+        }
     };
 };
 
@@ -112,11 +106,11 @@ module.exports = [
     generateConfig({
         background: {
             input: "pages/background/index.js",
-            output: "background/bundle",
+            output: "background"
         },
         config: {
             input: "pages/config/index.js",
-            output: "config/bundle",
-        },
-    }),
+            output: "config/bundle"
+        }
+    })
 ];

@@ -5,8 +5,8 @@
   "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack-cli --config ./build/webpack.build.config.js",
-    "watch": "webpack-cli --config ./build/webpack.config.js --watch"
+    "build": "webpack-cli --config ./build/webpack.config.js --mode=production",
+    "watch": "webpack-cli --config ./build/webpack.config.js --watch --mode=development"
   },
   "repository": {
     "type": "git",
