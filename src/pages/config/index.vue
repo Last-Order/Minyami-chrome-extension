@@ -164,8 +164,8 @@ export default {
             showConfig: false
         };
     },
-    mounted() {
-        this.configForm.threads = Storage.getConfig("threads");
+    async mounted() {
+        this.configForm.threads = await Storage.getConfig("threads");
         setInterval(this.getKeys, 1000);
         setInterval(this.getCookies, 1000);
         setInterval(this.check, 1000);
@@ -175,9 +175,9 @@ export default {
     },
     methods: {
         check() {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0]) {
-                    this.playlists = Storage.getHistory(tabs[0].url);
+                    this.playlists = await Storage.getHistory(tabs[0].url);
                     this.currentUrl = tabs[0].url;
                 }
             });
@@ -199,8 +199,8 @@ export default {
             if (this.form.live) {
                 command += ` --live`;
             }
-            if (Storage.getConfig("threads")) {
-                command += ` --threads ${Storage.getConfig("threads")}`;
+            if (this.configForm.threads) {
+                command += ` --threads ${this.configForm.threads}`;
             }
             return command;
         },
@@ -210,9 +210,9 @@ export default {
             document.execCommand("copy");
         },
         getKeys() {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0]) {
-                    const keys = Storage.getHistory(tabs[0].url + "-key");
+                    const keys = await Storage.getHistory(tabs[0].url + "-key");
                     if (keys && keys.length > 0) {
                         this.keys = keys;
                     }
@@ -220,9 +220,9 @@ export default {
             });
         },
         getCookies() {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0]) {
-                    const cookies = Storage.getHistory(tabs[0].url + "-cookies");
+                    const cookies = await Storage.getHistory(tabs[0].url + "-cookies");
                     if (cookies && cookies.length > 0) {
                         this.cookies = cookies;
                     }
@@ -266,20 +266,23 @@ export default {
             return !this.currentUrl || !supportedSites.includes(new URL(this.currentUrl).host);
         },
         showMinyamiVersionRequirementTip() {
+            if (!this.currentUrl) {
+                return false;
+            }
             const host = new URL(this.currentUrl).host;
             if (Object.keys(minyamiVersionRequirementMap).includes(host)) {
                 return minyamiVersionRequirementMap[host];
             }
             return null;
         },
-        saveConfig() {
+        async saveConfig() {
             const threads = this.configForm.threads;
-            Storage.setConfig("threads", threads);
+            await Storage.setConfig("threads", threads);
             this.showConfig = false;
         },
-        changeLanguage() {
+        async changeLanguage() {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
-            Storage.setConfig("language", targetLanguage);
+            await Storage.setConfig("language", targetLanguage);
             this.$i18n.locale = targetLanguage;
         }
     }
