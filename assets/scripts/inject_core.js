@@ -349,10 +349,10 @@
     };
 
     const bilibili = async () => {
-        if (!location.href.match(/live.bilibili.com\/(\d+)/)) {
+        if (!location.href.match(/live\.bilibili\.com\/(?:blanc\/)*(\d+)/)) {
             return;
         }
-        const roomId = location.href.match(/live.bilibili.com\/(\d+)/)[1];
+        const roomId = location.href.match(/live\.bilibili\.com\/(?:blanc\/)*(\d+)/)[1];
         const api = `https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=${roomId}&protocol=0,1&format=0,1,2&codec=0,1,2&qn=10000&platform=web&ptype=16`;
         const roomLiveInfo = await (await fetch(api)).json();
         if (!roomLiveInfo?.data?.playurl_info?.playurl?.stream) {

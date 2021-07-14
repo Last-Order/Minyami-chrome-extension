@@ -166,12 +166,14 @@ export default {
     },
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
-        setInterval(this.getKeys, 1000);
-        setInterval(this.getCookies, 1000);
-        setInterval(this.check, 1000);
         this.check();
         this.getKeys();
         this.getCookies();
+        chrome.storage.local.onChanged.addListener(() => {
+            this.check();
+            this.getKeys();
+            this.getCookies();
+        });
     },
     methods: {
         check() {
