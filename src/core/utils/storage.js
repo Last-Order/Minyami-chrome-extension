@@ -2,7 +2,7 @@ let setHistoryLock = false;
 
 class Storage {
     static async clear() {
-        return await chrome.storage.local.clear();
+        return await Storage.set("history", JSON.stringify({}));
     }
     static async get(key) {
         return new Promise((resolve, reject) => {
@@ -99,7 +99,7 @@ class Storage {
             return undefined;
         }
         try {
-            return parsedConfig[config];
+            return config[key];
         } catch (e) {
             await Storage.set("config", {});
             return undefined;
