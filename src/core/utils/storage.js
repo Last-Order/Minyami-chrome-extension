@@ -74,7 +74,7 @@ class Storage {
         try {
             const parsedHistory = JSON.parse(history);
             if (parsedHistory[url]) {
-                if (Array.isArray(parsedHistory[url])) {
+                if (Array.isArray(parsedHistory[url]) && !parsedHistory[url].includes(item)) {
                     parsedHistory[url].push(item);
                 } else {
                     parsedHistory[url] = [item];
