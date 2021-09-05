@@ -301,7 +301,6 @@
                                 y: "Unknown"
                             },
                             url,
-                            minimumMinyamiVersion: "4.1.0"
                         }
                     ]
                 });

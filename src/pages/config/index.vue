@@ -144,7 +144,12 @@
 </style>
 <script>
 import Storage from "../../core/utils/storage.js";
-import { supportedSites, minyamiVersionRequirementMap } from "../../definitions";
+import {
+    supportedSites,
+    minyamiVersionRequirementMap,
+    siteAdditionalHeaders,
+    siteThreadsSettings
+} from "../../definitions";
 const needCookiesSites = ["360ch.tv"];
 const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
 export default {
@@ -163,6 +168,11 @@ export default {
             currentUrl: "",
             showConfig: false
         };
+    },
+    computed: {
+        currentUrlHost: function() {
+            return this.currentUrl && new URL(this.currentUrl).host;
+        }
     },
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
@@ -198,10 +208,17 @@ export default {
             if (this.cookies.length > 0) {
                 command += ` --headers "Cookie: ${this.cookies[index] || this.cookies[0]}"`;
             }
+            if (siteAdditionalHeaders[this.currentUrlHost]) {
+                for (const header of Object.keys(siteAdditionalHeaders[this.currentUrlHost])) {
+                    command += ` --headers "${header}: ${siteAdditionalHeaders[this.currentUrlHost][header]}"`;
+                }
+            }
             if (this.form.live) {
                 command += ` --live`;
             }
-            if (this.configForm.threads) {
+            if (siteThreadsSettings[this.currentUrlHost]) {
+                command += ` --threads ${siteThreadsSettings[this.currentUrlHost]}`;
+            } else if (this.configForm.threads) {
                 command += ` --threads ${this.configForm.threads}`;
             }
             return command;
@@ -265,17 +282,10 @@ export default {
             return false;
         },
         showNotSupported() {
-            return !this.currentUrl || !supportedSites.includes(new URL(this.currentUrl).host);
+            return !this.currentUrl || !supportedSites.includes(this.currentUrlHost);
         },
         showMinyamiVersionRequirementTip() {
-            if (!this.currentUrl) {
-                return false;
-            }
-            const host = new URL(this.currentUrl).host;
-            if (Object.keys(minyamiVersionRequirementMap).includes(host)) {
-                return minyamiVersionRequirementMap[host];
-            }
-            return null;
+            return minyamiVersionRequirementMap[this.currentUrlHost];
         },
         async saveConfig() {
             const threads = this.configForm.threads;
