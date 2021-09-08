@@ -12,6 +12,9 @@
                     <el-form-item :label="$t('message.threads')">
                         <el-input v-model="configForm.threads"></el-input>
                     </el-form-item>
+                    <el-form-item :label="$t('message.useNPX')">
+                        <el-checkbox v-model="configForm.useNPX"></el-checkbox>
+                    </el-form-item>
                     <el-form-item>
                         <el-button @click="saveConfig">{{ $t("message.save") }}</el-button>
                     </el-form-item>
@@ -148,10 +151,10 @@ import {
     supportedSites,
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
-    siteThreadsSettings
+    siteThreadsSettings,
+    needCookiesSites,
+    needKeySites
 } from "../../definitions";
-const needCookiesSites = ["360ch.tv"];
-const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
 export default {
     data() {
         return {
@@ -163,7 +166,8 @@ export default {
                 live: false
             },
             configForm: {
-                threads: ""
+                threads: "",
+                useNPX: false
             },
             currentUrl: "",
             showConfig: false
@@ -176,6 +180,7 @@ export default {
     },
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
+        this.configForm.useNPX = await Storage.getConfig("useNPX");
         this.check();
         this.getKeys();
         this.getCookies();
@@ -195,7 +200,7 @@ export default {
             });
         },
         generateCommand(chunklist, playlist, index) {
-            const prefix = "minyami";
+            const prefix = this.configForm.useNPX ? "npx minyami" : "minyami";
             let command = "";
             if (!this.form.recoverMode) {
                 command += `${prefix} -d "${chunklist.url}" --output "${playlist.title.replace(/\"/g, `\\"`)}.ts"`;
@@ -289,7 +294,9 @@ export default {
         },
         async saveConfig() {
             const threads = this.configForm.threads;
+            const useNPX = this.configForm.useNPX;
             await Storage.setConfig("threads", threads);
+            await Storage.setConfig("useNPX", useNPX);
             this.showConfig = false;
         },
         async changeLanguage() {

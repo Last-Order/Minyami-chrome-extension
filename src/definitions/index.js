@@ -18,6 +18,8 @@ export const supportedSites = [
     "spwn.jp",
     "live.bilibili.com"
 ];
+export const needCookiesSites = ["360ch.tv"];
+export const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
 export const siteAdditionalHeaders = {
     "twitcasting.tv": {
         Referer: "https://twitcasting.tv/",

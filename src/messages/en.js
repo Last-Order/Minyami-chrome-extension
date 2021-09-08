@@ -3,6 +3,7 @@ export default {
         settings: "Settings",
         proxy: "Proxy (Deprecated)",
         threads: "Threads",
+        useNPX: "Use NPX",
         save: "Save",
         noData: '"No Data"',
         noKeyWarning: "A key is needed to decrypt video but Minyami havn't got it. Please refresh and try again.",

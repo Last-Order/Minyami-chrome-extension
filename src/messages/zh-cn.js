@@ -3,6 +3,7 @@ export default {
         settings: "设置",
         proxy: "代理 (已弃用)",
         threads: "并发数量",
+        useNPX: "使用 NPX",
         save: "保存",
         noData: '"暂无数据"',
         noKeyWarning: "该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试",
