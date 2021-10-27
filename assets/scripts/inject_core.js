@@ -369,6 +369,11 @@
         }
     };
 
+    const asobistore = () => {
+        const url = document.querySelector('#embed_placeholder source').getAttribute('src');
+        fetch(url);
+    }
+
     // Execute when load
     switch (location.host) {
         case "abema.tv": {
@@ -397,6 +402,10 @@
         }
         case "live.bilibili.com": {
             bilibili();
+            break;
+        }
+        case "playervspf.channel.or.jp": {
+            asobistore();
             break;
         }
     }

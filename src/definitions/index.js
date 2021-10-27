@@ -16,7 +16,8 @@ export const supportedSites = [
     "nogidoga.com",
     "stagecrowd.live",
     "spwn.jp",
-    "live.bilibili.com"
+    "live.bilibili.com",
+    "playervspf.channel.or.jp"
 ];
 export const needCookiesSites = ["360ch.tv"];
 export const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp"];
