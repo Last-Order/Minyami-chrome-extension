@@ -155,6 +155,9 @@
                 case "www.showroom-live.com": {
                     showroom(this);
                 }
+                case "nicochannel.jp": {
+                    nicochannel(this);
+                }
             }
         });
     };
@@ -201,6 +204,19 @@
             });
         }
     };
+
+    const nicochannel = (xhr) => {
+        if (xhr.readyState === 4 && xhr.responseURL.includes("https://hls-auth.cloud.stream.co.jp/key")) {
+            const key = Array.from(new Uint8Array(xhr.response))
+                .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
+                .join("");
+            notify({
+                type: "key",
+                key: key
+            });
+        }
+    }
+
     const nico = () => {
         try {
             const liveData = JSON.parse(document.querySelector("#embedded-data").getAttribute("data-props"));
