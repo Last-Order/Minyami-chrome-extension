@@ -1,8 +1,10 @@
 (async () => {
-    const MINYAMI_EXTENSION_ID = (await new Promise((res) => {
-        window.addEventListener("MinyamiExtId", res, false);
-        window.dispatchEvent(new CustomEvent("MinyamiReady"));
-    })).detail;
+    const MINYAMI_EXTENSION_ID = (
+        await new Promise((res) => {
+            window.addEventListener("MinyamiExtId", res, false);
+            window.dispatchEvent(new CustomEvent("MinyamiReady"));
+        })
+    ).detail;
     const notify =
         window.notifyMinyamiExtractor ||
         ((
@@ -158,6 +160,9 @@
                 case "nicochannel.jp": {
                     nicochannel(this);
                 }
+                case "pizzaradio.jp": {
+                    nicochannel(this);
+                }
             }
         });
     };
@@ -215,7 +220,7 @@
                 key: key
             });
         }
-    }
+    };
 
     const nico = () => {
         try {
@@ -316,7 +321,7 @@
                                 x: "Unknown",
                                 y: "Unknown"
                             },
-                            url,
+                            url
                         }
                     ]
                 });
@@ -386,9 +391,9 @@
     };
 
     const asobistore = () => {
-        const url = document.querySelector('#embed_placeholder source').getAttribute('src');
+        const url = document.querySelector("#embed_placeholder source").getAttribute("src");
         fetch(url);
-    }
+    };
 
     // Execute when load
     switch (location.host) {

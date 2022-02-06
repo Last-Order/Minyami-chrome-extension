@@ -18,10 +18,19 @@ export const supportedSites = [
     "spwn.jp",
     "live.bilibili.com",
     "playervspf.channel.or.jp",
-    "nicochannel.jp"
+    "nicochannel.jp",
+    "pizzaradio.jp"
 ];
 export const needCookiesSites = ["360ch.tv"];
-export const needKeySites = ["abema.tv", "live2.nicovideo.jp", "live.nicovideo.jp", "dmm.com", "dmm.co.jp", "hibiki-radio.jp", "nicochannel.jp"];
+export const needKeySites = [
+    "abema.tv",
+    "live2.nicovideo.jp",
+    "live.nicovideo.jp",
+    "dmm.com",
+    "dmm.co.jp",
+    "hibiki-radio.jp",
+    "nicochannel.jp"
+];
 export const siteAdditionalHeaders = {
     "twitcasting.tv": {
         Referer: "https://twitcasting.tv/",
@@ -34,5 +43,6 @@ export const siteThreadsSettings = {
 export const minyamiVersionRequirementMap = {
     "live.nicovideo.jp": "4.2.5",
     "live.bilibili.com": "4.2.4",
-    "twitcasting.tv": "4.2.10"
+    "twitcasting.tv": "4.2.10",
+    "nicochannel.jp": "4.4.13"
 };
