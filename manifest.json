@@ -1,31 +1,27 @@
 {
     "name": "Minyami",
-    "version": "1.1.15",
+    "version": "1.3.9",
     "author": "Eridanus Sora",
-    "manifest_version": 2,
+    "manifest_version": 3,
     "description": "Minyami Chrome Extension",
-    "browser_action": {
+    "action": {
         "default_popup": "./config/index.html",
         "default_title": "查看当前流"
     },
     "background": {
-        "page": "./background/index.html",
-        "persistent": true
+        "service_worker": "./background.js"
     },
     "icons": {
         "128": "assets/logo.png"
     },
-    "permissions": [
-        "tabs",
-        "storage",
-        "webRequest",
-        "https://freshlive.tv/*",
+    "permissions": ["tabs", "storage", "webRequest"],
+    "host_permissions": [
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
         "https://abema.tv/video/*",
-        "http://live2.nicovideo.jp/watch/*",
+        "https://abema.tv/payperview/*",
         "https://live2.nicovideo.jp/watch/*",
-        "https://cas.nicovideo.jp/*",
+        "https://live.nicovideo.jp/watch/*",
         "https://gyao.yahoo.co.jp/*",
         "https://www.dmm.com/digital/-/player/*",
         "https://www.dmm.com/monthly/-/player/*",
@@ -37,18 +33,24 @@
         "https://www.showroom-live.com/*",
         "https://hibiki-radio.jp/*",
         "https://www.youtube.com/*",
-        "https://nogidoga.com/episode/*"
+        "https://nogidoga.com/episode/*",
+        "https://spwn.jp/*",
+        "https://stagecrowd.live/*",
+        "https://live.bilibili.com/*",
+        "https://mixbox.live/campaign_live/*",
+        "https://playervspf.channel.or.jp/*",
+        "https://nicochannel.jp/*",
+        "https://pizzaradio.jp/*"
     ],
     "content_scripts": [
         {
             "matches": [
-                "https://freshlive.tv/*",
                 "https://www.openrec.tv/*",
                 "https://abema.tv/channels/*/slots/*",
                 "https://abema.tv/video/*",
-                "http://live2.nicovideo.jp/watch/*",
+                "https://abema.tv/payperview/*",
                 "https://live2.nicovideo.jp/watch/*",
-                "https://cas.nicovideo.jp/*",
+                "https://live.nicovideo.jp/watch/*",
                 "https://gyao.yahoo.co.jp/*",
                 "https://www.dmm.com/digital/-/player/*",
                 "https://www.dmm.com/monthly/-/player/*",
@@ -60,22 +62,33 @@
                 "https://www.showroom-live.com/*",
                 "https://hibiki-radio.jp/*",
                 "https://www.youtube.com/*",
-                "https://nogidoga.com/episode/*"
+                "https://nogidoga.com/episode/*",
+                "https://spwn.jp/*",
+                "https://stagecrowd.live/*",
+                "https://live.bilibili.com/*",
+                "https://mixbox.live/campaign_live/*",
+                "https://playervspf.channel.or.jp/*",
+                "https://nicochannel.jp/*",
+                "https://pizzaradio.jp/*"
             ],
             "run_at": "document_end",
             "js": ["./assets/scripts/inject.js"]
         }
     ],
-    "web_accessible_resources": ["/assets/scripts/inject_core.js"],
+    "web_accessible_resources": [
+        {
+            "resources": ["/assets/scripts/inject_core.js"],
+            "matches": ["*://*/*"]
+        }
+    ],
     "externally_connectable": {
         "matches": [
-            "https://freshlive.tv/*",
             "https://www.openrec.tv/*",
             "https://abema.tv/channels/*/slots/*",
             "https://abema.tv/video/*",
-            "http://live2.nicovideo.jp/watch/*",
+            "https://abema.tv/payperview/*",
             "https://live2.nicovideo.jp/watch/*",
-            "https://cas.nicovideo.jp/*",
+            "https://live.nicovideo.jp/watch/*",
             "https://gyao.yahoo.co.jp/*",
             "https://www.dmm.com/digital/-/player/*",
             "https://www.dmm.com/monthly/-/player/*",
@@ -87,7 +100,14 @@
             "https://www.showroom-live.com/*",
             "https://hibiki-radio.jp/*",
             "https://www.youtube.com/*",
-            "https://nogidoga.com/episode/*"
+            "https://nogidoga.com/episode/*",
+            "https://spwn.jp/*",
+            "https://stagecrowd.live/*",
+            "https://live.bilibili.com/*",
+            "https://mixbox.live/campaign_live/*",
+            "https://playervspf.channel.or.jp/*",
+            "https://nicochannel.jp/*",
+            "https://pizzaradio.jp/*"
         ]
     },
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApOAvWQj8J9VZITRyM3ZkADne+Mswjchky3CFZon98uxrUwf1yV0RFzm8Y9CkygRHgNlKlLSFQF0pi5Or6YziNJpc1z97VgmI7Wwv89R/D/92JHyw1oq+LWmQAv3NnpJNqUGqMvTWmDamLP6z1kE4ikeGvqBSvlN+vlGSCYM4shS3JyavRL4LM1rBvTyFGFXmotixJ9HVEB6+IZa9tjHWHrz5FD5WAYjCKOuj3Cw6uC0tAOKTTr2vwVVUEHGPJDNd/WXGyyIeZw6kocd459L6MM5VkV/xSvwcwvvftAj/JVH0mo6nRQn2R1L+9l6XMYMZAW2D5USCwcFu542C9B8ATwIDAQAB"
