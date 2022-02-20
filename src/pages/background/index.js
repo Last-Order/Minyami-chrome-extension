@@ -7,9 +7,9 @@ import en from "../../messages/en";
 const tabToUrl = {};
 let currentTab;
 const processMessage = async (message, sender) => {
-    console.log(message);
+    // console.log(message);
     if (message.type === "set_language") {
-        return await checkCurrentURL(true);
+        return await updateCurrentTabStatus(true);
     }
     if (["query_current", "chunklist"].includes(message.type)) {
         return;
@@ -50,6 +50,7 @@ const processMessage = async (message, sender) => {
     if (sender.tab && sender.tab.id === currentTab) {
         chrome.runtime.sendMessage({
             type: "update_current",
+            tabId: currentTab,
             detail: {
                 ...(message.type == "key" ? { keys: await getCurrentKeys() } :
                         message.type == "cookies" ? { cookies: await getCurrentCookies() } :
@@ -61,18 +62,19 @@ const processMessage = async (message, sender) => {
                 }
             }
         });
-        await check();
+        await doUpdateCurrentTabStatus();
     }
 };
 // Chromium
 chrome.runtime.onMessageExternal.addListener(processMessage);
-// Firefox 
+// Firefox
 chrome.runtime.onMessage.addListener(processMessage);
 // 处理浮窗页面消息
 chrome.runtime.onMessage.addListener(async message => {
     if (message.type === "query_current") {
         chrome.runtime.sendMessage({
             type: "update_current",
+            tabId: currentTab,
             detail: {
                 playlists: await getCurrentPlaylists(),
                 keys: await getCurrentKeys(),
@@ -98,7 +100,7 @@ const handleWindowFocusChanged = async () => {
         currentTab = tabs[0].id;
         if (tabs[0].url) {
             tabToUrl[currentTab] = tabs[0].url;
-            await checkCurrentURL(true);
+            await updateCurrentTabStatus(true);
         } else {
             tabToUrl[currentTab] = "";
             await setCurrentStatus("initial");
@@ -110,7 +112,7 @@ const handleTabFocusChanged = async (tab) => {
     if (tab) {
         if (tab.url) {
             tabToUrl[currentTab] = tab.url;
-            await checkCurrentURL(tab.status !== "loading");
+            await updateCurrentTabStatus(tab.status !== "loading");
         } else {
             tabToUrl[currentTab] = "";
             await setCurrentStatus("initial");
@@ -128,6 +130,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         if (tabId === currentTab) {
             chrome.runtime.sendMessage({
                 type: "update_current",
+                tabId,
                 detail: {
                     playlists: [],
                     keys: [],
@@ -139,7 +142,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
                     },
                 }
             });
-            checkCurrentURL(false);
+            updateCurrentTabStatus(false);
         }
     }
 });
@@ -157,7 +160,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
     currentTab = activeInfo.tabId;
     if (tabToUrl[currentTab]) {
-        await checkCurrentURL(true);
+        await updateCurrentTabStatus(true);
     } else {
         chrome.tabs.get(currentTab, handleTabFocusChanged);
     }
@@ -171,20 +174,20 @@ chrome.runtime.onInstalled.addListener(async () => {
     handleWindowFocusChanged();
 });
 
-const checkCurrentURL = async (checkStatusNow) => {
-    console.log(tabToUrl[currentTab]);
+const updateCurrentTabStatus = async (checkStatusNow) => {
+    // console.log(tabToUrl[currentTab]);
     if (showNotSupported()) {
         await setCurrentStatus("stopped");
     } else {
         if (checkStatusNow) {
-            await check();
+            await doUpdateCurrentTabStatus();
         } else {
             await setCurrentStatus("initial");
         }
     }
 };
-
-const check = async () => {
+// 被调用时已经确定是支持的网站
+const doUpdateCurrentTabStatus = async () => {
     if ((await getCurrentPlaylists()).length > 0) {
         if (await showNoKeyWarning() || await showNoCookiesWarning()) {
             await setCurrentStatus("waiting");

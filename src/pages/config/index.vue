@@ -166,6 +166,7 @@ export default {
                 threads: "",
                 useNPX: false
             },
+            currentTab: undefined,
             currentUrl: "",
             currentUrlHost: "",
             showConfig: false,
@@ -177,9 +178,23 @@ export default {
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
         this.configForm.useNPX = await Storage.getConfig("useNPX");
-        chrome.runtime.onMessage.addListener((message) => {
+        this.currentTab = (await chrome.tabs.query({
+            active: true,
+            currentWindow: true
+        }))[0].id;
+        const eligibleKeys = [
+            "playlists", "keys", "cookies",
+            "currentUrl", "currentUrlHost", "status"
+        ];
+        chrome.runtime.onMessage.addListener(async (message) => {
+            // console.log(message);
             if (message.type === "update_current") {
-                Object.assign(this, message.detail);
+                if (message.tabId !== this.currentTab) return;
+                for (const k of eligibleKeys) {
+                    if (k in message.detail) {
+                        this[k] = message.detail[k];
+                    }
+                }
             }
         });
         this.check();
