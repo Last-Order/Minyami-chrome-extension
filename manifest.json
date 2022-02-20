@@ -6,7 +6,7 @@
     "description": "Minyami Chrome Extension",
     "action": {
         "default_popup": "./config/index.html",
-        "default_title": "查看当前流"
+        "default_title": "Minyami"
     },
     "background": {
         "service_worker": "./background.js"

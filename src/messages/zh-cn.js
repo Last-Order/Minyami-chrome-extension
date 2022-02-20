@@ -20,5 +20,11 @@ export default {
         trackName: "名称",
         copy: "复制",
         require: "需要"
+    },
+    tooltip: {
+        initial: "暂未获取到流",
+        waiting: "等待数据更新",
+        ready: "此页面有可用流",
+        stopped: "暂未支持此页面"
     }
 };

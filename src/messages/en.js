@@ -6,7 +6,7 @@ export default {
         useNPX: "Use NPX",
         save: "Save",
         noData: '"No Data"',
-        noKeyWarning: "A key is needed to decrypt video but Minyami havn't got it. Please refresh and try again.",
+        noKeyWarning: "A key is needed to decrypt video but Minyami haven't got it. Please refresh and try again.",
         noCookieWarning: "Some cookies are needed to download but Minyami havn't got it. Please refresh and try again.",
         cookieWarning: "Your cookies are included in the generated command. Please do not share it with others.",
         unsupportedTip:
@@ -21,5 +21,11 @@ export default {
         trackName: "Track Name",
         copy: "Copy",
         require: "Require"
+    },
+    tooltip: {
+        initial: "No data available",
+        waiting: "Awaiting more data",
+        ready: "Streams available",
+        stopped: "Page not supported"
     }
 };

@@ -148,7 +148,6 @@
 <script>
 import Storage from "../../core/utils/storage.js";
 import {
-    supportedSites,
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
     siteThreadsSettings
@@ -225,9 +224,6 @@ export default {
             input[0].select();
             document.execCommand("copy");
         },
-        showNotSupported() {
-            return !this.currentUrl || !supportedSites.includes(this.currentUrlHost);
-        },
         showMinyamiVersionRequirementTip() {
             return minyamiVersionRequirementMap[this.currentUrlHost];
         },
@@ -242,6 +238,9 @@ export default {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
             await Storage.setConfig("language", targetLanguage);
             this.$i18n.locale = targetLanguage;
+            chrome.runtime.sendMessage({
+                type: "set_language"
+            });
         }
     }
 };

@@ -1,16 +1,16 @@
 import { Playlist } from "../../core/m3u8.js";
 import Storage from "../../core/utils/storage.js";
-import Icon from "../../core/utils/icon.js";
-import { needCookiesSites, needKeySites } from "../../definitions";
+import { needCookiesSites, needKeySites, supportedSites } from "../../definitions";
+import zh_CN from "../../messages/zh-cn";
+import en from "../../messages/en";
+
 const tabToUrl = {};
 let currentTab;
-const icon = new Icon(document.getElementById("logo"));
-chrome.runtime.onInstalled.addListener(async () => {
-    // 安装后清理存储的历史
-    await Storage.clear();
-});
-const processMessage = async (message, sender, sendResponse) => {
+const processMessage = async (message, sender) => {
     console.log(message);
+    if (message.type === "set_language") {
+        return await checkCurrentURL(true);
+    }
     if (["query_current", "chunklist"].includes(message.type)) {
         return;
     }
@@ -47,7 +47,7 @@ const processMessage = async (message, sender, sendResponse) => {
             await Storage.setHistory(sender.tab.url + "-cookies", message.cookies);
         }
     }
-    if (sender.tab.id === currentTab) {
+    if (sender.tab && sender.tab.id === currentTab) {
         chrome.runtime.sendMessage({
             type: "update_current",
             detail: {
@@ -55,13 +55,13 @@ const processMessage = async (message, sender, sendResponse) => {
                         message.type == "cookies" ? { cookies: await getCurrentCookies() } :
                             { playlists: await getCurrentPlaylists() }),
                 status: {
-                    noKeyWarning: showNoKeyWarning(),
-                    noCookiesWarning: showNoCookiesWarning(),
+                    noKeyWarning: await showNoKeyWarning(),
+                    noCookiesWarning: await showNoCookiesWarning(),
                     notSupported: false
                 }
             }
         });
-        check();
+        await check();
     }
 };
 // Chromium
@@ -80,8 +80,8 @@ chrome.runtime.onMessage.addListener(async message => {
                 currentUrl: tabToUrl[currentTab],
                 currentUrlHost: getCurrentUrlHost(),
                 status: {
-                    noKey: showNoKeyWarning(),
-                    noCookies: showNoCookiesWarning(),
+                    noKey: await showNoKeyWarning(),
+                    noCookies: await showNoCookiesWarning(),
                     notSupported: showNotSupported()
                 },
             }
@@ -89,28 +89,31 @@ chrome.runtime.onMessage.addListener(async message => {
     }
 });
 // 处理窗口切换等需要重新定位活动标签的情况
-let handleWindowFocusChanged = () =>
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (tabs[0]) {
-            currentTab = tabs[0].id;
-            if (tabs[0].url) {
-                tabToUrl[currentTab] = tabs[0].url;
-                checkCurrentURL(true);
-            } else {
-                tabToUrl[currentTab] = "";
-                icon.reset();
-            }
-        }
+const handleWindowFocusChanged = async () => {
+    const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
     });
+    if (tabs[0]) {
+        currentTab = tabs[0].id;
+        if (tabs[0].url) {
+            tabToUrl[currentTab] = tabs[0].url;
+            await checkCurrentURL(true);
+        } else {
+            tabToUrl[currentTab] = "";
+            await setCurrentStatus("initial");
+        }
+    }
+};
 // 处理在新标签中打开页面、手动切换标签等监视目标已知的情况
-let handleTabFocusChanged = tab => {
+const handleTabFocusChanged = async (tab) => {
     if (tab) {
         if (tab.url) {
             tabToUrl[currentTab] = tab.url;
-            checkCurrentURL(tab.status === "loading");
+            await checkCurrentURL(tab.status !== "loading");
         } else {
             tabToUrl[currentTab] = "";
-            icon.reset();
+            await setCurrentStatus("initial");
         }
     }
 };
@@ -123,6 +126,19 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         await Storage.removeHistory(url + "-key");
         await Storage.removeHistory(url + "-cookies");
         if (tabId === currentTab) {
+            chrome.runtime.sendMessage({
+                type: "update_current",
+                detail: {
+                    playlists: [],
+                    keys: [],
+                    cookies: [],
+                    currentUrl: "",
+                    currentUrlHost: "",
+                    status: {
+                        notSupported: showNotSupported()
+                    },
+                }
+            });
             checkCurrentURL(false);
         }
     }
@@ -138,10 +154,10 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
     }
 });
 
-chrome.tabs.onActivated.addListener(activeInfo => {
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
     currentTab = activeInfo.tabId;
     if (tabToUrl[currentTab]) {
-        checkCurrentURL(true);
+        await checkCurrentURL(true);
     } else {
         chrome.tabs.get(currentTab, handleTabFocusChanged);
     }
@@ -149,64 +165,93 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 
 chrome.windows.onFocusChanged.addListener(handleWindowFocusChanged);
 
-chrome.runtime.onInstalled.addListener(details => {
-    localStorage.removeItem("history");
-    console.info("Minyami has been installed.");
+chrome.runtime.onInstalled.addListener(async () => {
+    // 安装后清理存储的历史
+    await Storage.clear();
     handleWindowFocusChanged();
 });
 
-const checkCurrentURL = (checkStatusNow) => {
+const checkCurrentURL = async (checkStatusNow) => {
     console.log(tabToUrl[currentTab]);
     if (showNotSupported()) {
-        icon.setStopped();
+        await setCurrentStatus("stopped");
     } else {
         if (checkStatusNow) {
-            check();
+            await check();
         } else {
-            icon.reset();
+            await setCurrentStatus("initial");
         }
     }
 };
 
-const check = () => {
-    if (getCurrentPlaylists().length > 0) {
-        if (showNoKeyWarning() || showNoCookiesWarning()) {
-            icon.setWaiting();
+const check = async () => {
+    if ((await getCurrentPlaylists()).length > 0) {
+        if (await showNoKeyWarning() || await showNoCookiesWarning()) {
+            await setCurrentStatus("waiting");
         } else {
-            icon.setReady();
+            await setCurrentStatus("ready");
         }
     } else {
-        icon.reset();
+        await setCurrentStatus("initial");
     }
+};
+
+const setCurrentStatus = async (status) => {
+    const streamCount = (await getCurrentPlaylists()).length.toString();
+    const [color, text] = {
+        initial: ["#a9a9a9", " "],
+        stopped: ["red", "-"],
+        waiting: ["orange", streamCount],
+        ready: ["green", streamCount]
+    }[status];
+    await chrome.action.setBadgeBackgroundColor({
+        tabId: currentTab,
+        color
+    });
+    await chrome.action.setBadgeText({
+        tabId: currentTab,
+        text
+    });
+    const { tooltip } = { zh_CN, en }[
+        await Storage.getConfig("language") || "zh_CN"
+    ];
+    await chrome.action.setTitle({
+        tabId: currentTab,
+        title: `Minyami: ${tooltip[status]}`
+    });
 };
 
 const getCurrentPlaylists = async () =>
-    await Storage.getHistory(tabToUrl[currentTab]);
+    !(currentTab in tabToUrl) && [] ||
+        await Storage.getHistory(tabToUrl[currentTab]);
 
 const getCurrentKeys = async () =>
-    await Storage.getHistory(tabToUrl[currentTab] + "-key");
+    !(currentTab in tabToUrl) && [] ||
+        await Storage.getHistory(tabToUrl[currentTab] + "-key");
 
 const getCurrentCookies = async () =>
-    await Storage.getHistory(tabToUrl[currentTab] + "-cookies");
+    !(currentTab in tabToUrl) && [] ||
+        await Storage.getHistory(tabToUrl[currentTab] + "-cookies");
 
-const getCurrentUrlHost = () => new URL(tabToUrl[currentTab]).host;
+const getCurrentUrlHost = () =>
+    tabToUrl[currentTab] && new URL(tabToUrl[currentTab]).host;
 
-const showNoKeyWarning = () => {
-    for (const site of needKeySites) {
-        if (tabToUrl[currentTab].includes(site) && !getCurrentKeys().length) {
+const showNoKeyWarning = async () => {
+    if (currentTab in tabToUrl) for (const site of needKeySites) {
+        if (tabToUrl[currentTab].includes(site) && !(await getCurrentKeys()).length) {
             return true;
         }
     }
     return false;
 };
 
-const showNoCookiesWarning = () => {
-    for (const site of needCookiesSites) {
-        if (tabToUrl[currentTab].includes(site) && !getCurrentCookies().length) {
+const showNoCookiesWarning = async () => {
+    if (currentTab in tabToUrl) for (const site of needCookiesSites) {
+        if (tabToUrl[currentTab].includes(site) && !(await getCurrentCookies()).length) {
             return true;
         }
     }
     return false;
 };
 
-const showNotSupported = () => !supportedSites.includes(getCurrentUrlHost);
+const showNotSupported = () => !supportedSites.includes(getCurrentUrlHost());
