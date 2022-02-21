@@ -24,10 +24,10 @@
         <el-card v-if="playlists.length === 0" shadow="never">
             <div style="text-align: center">{{ $t("message.noData") }}</div>
         </el-card>
-        <el-card v-if="status.noKeyWarning" shadow="never">
+        <el-card v-if="status.missingKey" shadow="never">
             <el-alert :title="$t('message.noKeyWarning')" type="error"></el-alert>
         </el-card>
-        <el-card v-if="status.noCookiesWarning" shadow="never">
+        <el-card v-if="status.missingCookie" shadow="never">
             <el-alert :title="$t('message.noCookieWarning')" type="error"></el-alert>
         </el-card>
         <el-card v-if="cookies.length > 0" shadow="never">
@@ -152,6 +152,7 @@ import {
     siteAdditionalHeaders,
     siteThreadsSettings
 } from "../../definitions";
+const eligibleKeys = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
 export default {
     data() {
         return {
@@ -178,15 +179,15 @@ export default {
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
         this.configForm.useNPX = await Storage.getConfig("useNPX");
-        this.currentTab = (await chrome.tabs.query({
-            active: true,
-            currentWindow: true
-        }))[0].id;
-        const eligibleKeys = [
-            "playlists", "keys", "cookies",
-            "currentUrl", "currentUrlHost", "status"
-        ];
-        chrome.runtime.onMessage.addListener(async (message) => {
+        this.currentTab = (await chrome.tabs.query({ active: true, currentWindow: true }))[0].id;
+        chrome.runtime.onMessage.addListener(this.handleDataUpdate);
+        chrome.runtime.sendMessage({ type: "query_current" });
+    },
+    unmounted() {
+        chrome.runtime.onMessage.removeListener(this.handleDataUpdate);
+    },
+    methods: {
+        async handleDataUpdate(message) {
             // console.log(message);
             if (message.type === "update_current") {
                 if (message.tabId !== this.currentTab) return;
@@ -196,14 +197,6 @@ export default {
                     }
                 }
             }
-        });
-        this.check();
-    },
-    methods: {
-        check() {
-            chrome.runtime.sendMessage({
-                type: "query_current"
-            });
         },
         generateCommand(chunklist, playlist, index) {
             const prefix = this.configForm.useNPX ? "npx minyami" : "minyami";
@@ -253,9 +246,7 @@ export default {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
             await Storage.setConfig("language", targetLanguage);
             this.$i18n.locale = targetLanguage;
-            chrome.runtime.sendMessage({
-                type: "set_language"
-            });
+            chrome.runtime.sendMessage({ type: "set_language" });
         }
     }
 };
