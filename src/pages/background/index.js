@@ -72,9 +72,12 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     if (sender.tab) return;
     // console.log(message);
     if (message.type === "set_language") {
-        return await updateTabStatus(currentTab, true);
+        for (const tab of await chrome.tabs.query({})) {
+            await updateTabStatus(tab.id, tab.id in tabToUrl);
+        }
+        return;
     }
-    if (message.type === "query_current") { // 浮窗页面装载
+    if (message.type === "query_current" && currentTab in tabToUrl) { // 浮窗页面装载
         chrome.runtime.sendMessage({
             type: "update_current",
             tabId: currentTab,
@@ -159,6 +162,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 const updateTabStatus = async (tabId, checkStatusNow) => {
     if (tabNotSupported(tabId)) {
         await setTabStatus(tabId, "stopped");
+        delete tabToUrl[tabId];
     } else {
         if (checkStatusNow) {
             await doUpdateTabStatus(tabId);

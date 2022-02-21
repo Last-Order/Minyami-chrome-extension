@@ -189,6 +189,13 @@ export default {
     methods: {
         async handleDataUpdate(message) {
             // console.log(message);
+            if (message.type === "set_language") {
+                this.$i18n.locale = await Storage.getConfig("language");
+            }
+            if (message.type === "save_config") {
+                this.configForm.threads = await Storage.getConfig("threads");
+                this.configForm.useNPX = await Storage.getConfig("useNPX");
+            }
             if (message.type === "update_current") {
                 if (message.tabId !== this.currentTab) return;
                 for (const k of eligibleKeys) {
@@ -241,6 +248,7 @@ export default {
             await Storage.setConfig("threads", threads);
             await Storage.setConfig("useNPX", useNPX);
             this.showConfig = false;
+            chrome.runtime.sendMessage({ type: "save_config" });
         },
         async changeLanguage() {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
