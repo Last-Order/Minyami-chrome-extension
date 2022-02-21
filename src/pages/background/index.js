@@ -6,10 +6,20 @@ import en from "../../messages/en";
 
 const tabToUrl = {};
 let currentTab;
+
+const cacheUrlTab = (tabId) => new Promise((resolve) =>
+    chrome.tabs.sendMessage(tabId, { type: "get_url" }, (response) => {
+        if (!chrome.runtime.lastError && response && response.type === "url") {
+            tabToUrl[tabId] = response.detail;
+        }
+        resolve(tabToUrl[tabId]);
+    })
+);
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab || message.type === "chunklist") return;
-    const { id: tabId, url } = sender.tab;
+    const tabId = sender.tab.id;
+    const url = await cacheUrlTab(tabId); // 必然回复可用值
     // console.log(message);
     if (message.type === "playlist") {
         const playlist = new Playlist({
@@ -73,11 +83,13 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     // console.log(message);
     if (message.type === "set_language") {
         for (const tab of await chrome.tabs.query({})) {
-            await updateTabStatus(tab.id, tab.id in tabToUrl);
+            await cacheUrlTab(tab.id);
+            await updateTabStatus(tab.id, true);
         }
         return;
     }
-    if (message.type === "query_current" && currentTab in tabToUrl) { // 浮窗页面装载
+    if (message.type === "query_current") { // 浮窗页面装载
+        if (!await cacheUrlTab(currentTab)) return;
         chrome.runtime.sendMessage({
             type: "update_current",
             tabId: currentTab,
@@ -103,6 +115,8 @@ const handleWindowFocusChanged = async () => {
         currentTab = tabs[0].id;
     }
 };
+// Service Worker 唤醒时立即更新活动标签
+handleWindowFocusChanged();
 // 监视新建或刷新标签页
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status !== "loading") return;
@@ -132,7 +146,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-    if (tabToUrl[tabId]) {
+    if (await cacheUrlTab(tabId)) {
         const url = tabToUrl[tabId];
         await Storage.removeHistory(url);
         await Storage.removeHistory(url + "-key");
@@ -156,7 +170,6 @@ chrome.runtime.onInstalled.addListener(async () => {
         }
         await updateTabStatus(tab.id, false);
     }
-    await handleWindowFocusChanged();
 });
 
 const updateTabStatus = async (tabId, checkStatusNow) => {
