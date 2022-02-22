@@ -21,8 +21,9 @@
                 </el-form>
             </el-card>
         </div>
-        <el-card v-if="playlists.length === 0" shadow="never">
-            <div style="text-align: center">{{ $t("message.noData") }}</div>
+        <el-card style="text-align: center" v-if="playlists.length === 0" shadow="never">
+            <div style="font-size: larger">{{ $t("message.noData") }}</div>
+            <div style="margin-top: 10px; opacity: .5">{{ $t('message.noDataTip') }}</div>
         </el-card>
         <el-card v-if="status.missingKey" shadow="never">
             <el-alert :title="$t('message.noKeyWarning')" type="error"></el-alert>
@@ -33,13 +34,13 @@
         <el-card v-if="cookies.length > 0" shadow="never">
             <el-alert :title="$t('message.cookieWarning')" type="warning"></el-alert>
         </el-card>
-        <el-card v-if="showMinyamiVersionRequirementTip()" shadow="never">
+        <el-card v-if="showMinyamiVersionRequirementTip" shadow="never">
             <el-alert
-                :title="$t('message.minyamiVersionRequirementTip', { version: showMinyamiVersionRequirementTip() })"
+                :title="$t('message.minyamiVersionRequirementTip', { version: showMinyamiVersionRequirementTip })"
                 type="info"
             ></el-alert>
         </el-card>
-        <el-card v-if="status.notSupported" shadow="never">
+        <el-card v-if="!status.supported" shadow="never">
             <el-alert :title="$t('message.unsupportedTip')" type="error"></el-alert>
         </el-card>
         <el-card class="playlist-item" v-for="(playlist, index) in playlists" :key="playlist.url" shadow="never">
@@ -150,9 +151,10 @@ import Storage from "../../core/utils/storage.js";
 import {
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
-    siteThreadsSettings
+    siteThreadsSettings,
+    parseStatusFlags
 } from "../../definitions";
-const eligibleKeys = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
+const dataFields = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
 export default {
     data() {
         return {
@@ -171,19 +173,33 @@ export default {
             currentUrl: "",
             currentUrlHost: "",
             showConfig: false,
-            status: {
-                notSupported: true
-            }
+            statusFlags: 0
         };
+    },
+    computed: {
+        showMinyamiVersionRequirementTip: function() {
+            return minyamiVersionRequirementMap[this.currentUrlHost];
+        },
+        status: {
+            set: function(flags) {
+                this.statusFlags = flags;
+            },
+            get: function() {
+                return parseStatusFlags(this.statusFlags);
+            }
+        }
     },
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
         this.configForm.useNPX = await Storage.getConfig("useNPX");
-        this.currentTab = (await chrome.tabs.query({ active: true, currentWindow: true }))[0].id;
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs || tabs.length === 0) return;
+        this.currentTab = tabs[0].id;
         chrome.runtime.onMessage.addListener(this.handleDataUpdate);
-        chrome.runtime.sendMessage({ type: "query_current" });
+        chrome.runtime.sendMessage({ type: "query_livedata" });
     },
     unmounted() {
+        if (!this.currentTab) return;
         chrome.runtime.onMessage.removeListener(this.handleDataUpdate);
     },
     methods: {
@@ -196,11 +212,11 @@ export default {
                 this.configForm.threads = await Storage.getConfig("threads");
                 this.configForm.useNPX = await Storage.getConfig("useNPX");
             }
-            if (message.type === "update_current") {
+            if (message.type === "update_livedata") {
                 if (message.tabId !== this.currentTab) return;
-                for (const k of eligibleKeys) {
-                    if (k in message.detail) {
-                        this[k] = message.detail[k];
+                for (const field of dataFields) {
+                    if (field in message.detail) {
+                        this[field] = message.detail[field];
                     }
                 }
             }
@@ -238,9 +254,6 @@ export default {
             const input = this.$refs[chunkList.url];
             input[0].select();
             document.execCommand("copy");
-        },
-        showMinyamiVersionRequirementTip() {
-            return minyamiVersionRequirementMap[this.currentUrlHost];
         },
         async saveConfig() {
             const threads = this.configForm.threads;

@@ -1,25 +1,30 @@
 import { Playlist } from "../../core/m3u8.js";
 import Storage from "../../core/utils/storage.js";
-import { needCookiesSites, needKeySites, supportedSites } from "../../definitions";
+import {
+    needCookiesSites,
+    needKeySites,
+    supportedSites,
+    statusFlags
+} from "../../definitions";
 import zh_CN from "../../messages/zh-cn";
 import en from "../../messages/en";
 
 const tabToUrl = {};
-let currentTab;
 
-const cacheUrlTab = (tabId) => new Promise((resolve) =>
+const cacheTabUrl = (tabId) => new Promise((resolve) => {
+    if (typeof tabId !== "number") return resolve();
     chrome.tabs.sendMessage(tabId, { type: "get_url" }, (response) => {
         if (!chrome.runtime.lastError && response && response.type === "url") {
             tabToUrl[tabId] = response.detail;
         }
         resolve(tabToUrl[tabId]);
     })
-);
+});
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab || message.type === "chunklist") return;
     const tabId = sender.tab.id;
-    const url = await cacheUrlTab(tabId); // 必然回复可用值
+    const url = await cacheTabUrl(tabId); // 必然回复可用值
     // console.log(message);
     if (message.type === "playlist") {
         const playlist = new Playlist({
@@ -57,17 +62,13 @@ const handleContentScriptMessage = async (message, sender) => {
     // 实时更新浮窗页面数据
     if (sender.tab.active) {
         chrome.runtime.sendMessage({
-            type: "update_current",
+            type: "update_livedata",
             tabId,
             detail: {
                 ...(message.type == "key" ? { keys: await getTabKeys(tabId) } :
                         message.type == "cookies" ? { cookies: await getTabCookies(tabId) } :
                             { playlists: await getTabPlaylists(tabId) }),
-                status: {
-                    missingKey: await tabMissingKey(tabId),
-                    missingCookie: await tabMissingCookie(tabId),
-                    notSupported: false
-                }
+                status: await getTabStatusFlags(tabId)
             }
         });
     }
@@ -83,40 +84,30 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     // console.log(message);
     if (message.type === "set_language") {
         for (const tab of await chrome.tabs.query({})) {
-            await cacheUrlTab(tab.id);
+            await cacheTabUrl(tab.id);
             await updateTabStatus(tab.id, true);
         }
         return;
     }
-    if (message.type === "query_current") { // 浮窗页面装载
-        if (!await cacheUrlTab(currentTab)) return;
+    if (message.type === "query_livedata") { // 浮窗页面装载
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs || tabs.length === 0) return;
+        const currentTab = tabs[0].id;
+        if (!await cacheTabUrl(currentTab)) return;
         chrome.runtime.sendMessage({
-            type: "update_current",
+            type: "update_livedata",
             tabId: currentTab,
             detail: {
                 playlists: await getTabPlaylists(currentTab),
                 keys: await getTabKeys(currentTab),
                 cookies: await getTabCookies(currentTab),
                 currentUrl: tabToUrl[currentTab],
-                currentUrlHost: getTabUrlHost(currentTab),
-                status: {
-                    missingKey: await tabMissingKey(currentTab),
-                    missingCookie: await tabMissingCookie(currentTab),
-                    notSupported: tabNotSupported(currentTab)
-                },
+                currentUrlHost: new URL(tabToUrl[currentTab]).host,
+                status: await getTabStatusFlags(currentTab)
             }
         });
     }
 });
-// 处理窗口切换等需要重新定位活动标签的情况
-const handleWindowFocusChanged = async () => {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]) {
-        currentTab = tabs[0].id;
-    }
-};
-// Service Worker 唤醒时立即更新活动标签
-handleWindowFocusChanged();
 // 监视新建或刷新标签页
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status !== "loading") return;
@@ -128,17 +119,15 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     // 判断是否为任意窗口的活动标签页
     if (tab.active) {
         chrome.runtime.sendMessage({
-            type: "update_current",
+            type: "update_livedata",
             tabId,
             detail: {
                 playlists: [],
                 keys: [],
                 cookies: [],
                 currentUrl: url,
-                currentUrlHost: getTabUrlHost(tabId),
-                status: {
-                    notSupported: tabNotSupported(tabId)
-                },
+                currentUrlHost: new URL(url).host,
+                status: await getTabStatusFlags(tabId),
             }
         });
     }
@@ -146,7 +135,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-    if (await cacheUrlTab(tabId)) {
+    if (await cacheTabUrl(tabId)) {
         const url = tabToUrl[tabId];
         await Storage.removeHistory(url);
         await Storage.removeHistory(url + "-key");
@@ -155,25 +144,25 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
     }
 });
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
-    currentTab = activeInfo.tabId;
-});
-
-chrome.windows.onFocusChanged.addListener(handleWindowFocusChanged);
-
 chrome.runtime.onInstalled.addListener(async () => {
     // 安装后清理存储的历史
     await Storage.clear();
-    for (const tab of await chrome.tabs.query({})) {
-        if (tab.url) {
-            tabToUrl[tab.id] = tab.url;
-        }
-        await updateTabStatus(tab.id, false);
-    }
+    await initializeTabStatuses(true);
 });
+// 处理扩展重新启用等需要重新加载状态的情形
+const initializeTabStatuses = async (clear) => {
+    for (const tab of await chrome.tabs.query({})) {
+        if (clear || !(await chrome.action.getBadgeText({ tabId: tab.id }))) {
+            tabToUrl[tab.id] = tab.url;
+            await cacheTabUrl(tab.id);
+            await updateTabStatus(tab.id, !clear);
+        }
+    }
+};
+initializeTabStatuses(false);
 
 const updateTabStatus = async (tabId, checkStatusNow) => {
-    if (tabNotSupported(tabId)) {
+    if (urlNotSupported(tabToUrl[tabId])) {
         await setTabStatus(tabId, "stopped");
         delete tabToUrl[tabId];
     } else {
@@ -187,10 +176,10 @@ const updateTabStatus = async (tabId, checkStatusNow) => {
 // 被调用时已经确定是支持的网站
 const doUpdateTabStatus = async (tabId) => {
     if ((await getTabPlaylists(tabId)).length > 0) {
-        if (await tabMissingKey(tabId) || await tabMissingCookie(tabId)) {
-            await setTabStatus(tabId, "waiting");
-        } else {
+        if (await getTabStatusFlags(tabId) === statusFlags.supported) {
             await setTabStatus(tabId, "ready");
+        } else {
+            await setTabStatus(tabId, "waiting");
         }
     } else {
         await setTabStatus(tabId, "initial");
@@ -200,8 +189,8 @@ const doUpdateTabStatus = async (tabId) => {
 const setTabStatus = async (tabId, status) => {
     const streamCount = (await getTabPlaylists(tabId)).length.toString();
     const [color, text] = {
-        initial: ["#a9a9a9", " "],
-        stopped: ["red", "-"],
+        initial: ["#1966b3", "?"],
+        stopped: ["#a9a9a9", "-"],
         waiting: ["orange", streamCount],
         ready: ["green", streamCount]
     }[status];
@@ -225,25 +214,24 @@ const getTabCookies = async (tabId) =>
     !(tabId in tabToUrl) && [] ||
         await Storage.getHistory(tabToUrl[tabId] + "-cookies");
 
-const getTabUrlHost = (tabId) =>
-    tabToUrl[tabId] && new URL(tabToUrl[tabId]).host;
-
-const tabMissingKey = async (tabId) => {
-    if (tabId in tabToUrl) for (const site of needKeySites) {
-        if (tabToUrl[tabId].includes(site) && !(await getTabKeys(tabId)).length) {
-            return true;
+const getTabStatusFlags = async (tabId) => {
+    const url = tabToUrl[tabId];
+    if (urlNotSupported(url)) {
+        return ~statusFlags.supported;
+    }
+    let flags = statusFlags.supported;
+    for (const site of needKeySites) {
+        if (url.includes(site) && !(await getTabKeys(tabId)).length) {
+            flags |= statusFlags.missingKey;
         }
     }
-    return false;
-};
-
-const tabMissingCookie = async (tabId) => {
-    if (tabId in tabToUrl) for (const site of needCookiesSites) {
-        if (tabToUrl[tabId].includes(site) && !(await getTabCookies(tabId)).length) {
-            return true;
+    for (const site of needCookiesSites) {
+        if (url.includes(site) && !(await getTabCookies(tabId)).length) {
+            flags |= statusFlags.missingCookie;
         }
     }
-    return false;
+    return flags;
 };
 
-const tabNotSupported = (tabId) => !supportedSites.includes(getTabUrlHost(tabId));
+const urlNotSupported = (url) =>
+    !url || !supportedSites.includes(new URL(url).host);
