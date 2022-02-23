@@ -6,13 +6,15 @@
         })
     ).detail;
     const notify =
-        window.notifyMinyamiExtractor /* Firefox */ ||
-        ((msg) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg));
-    let href = window.location.href;
-    window.addEventListener("MinyamiGetCachedPageUrl", () => {
-        window.dispatchEvent(new CustomEvent("MinyamiCachedPageUrl", { detail: href }));
-    }, false);
-    window.addEventListener("unload", notify({ type: "page_url", detail: href }), false);
+        window.notifyMinyamiExtractor /* Firefox */ || ((msg) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg));
+    window.addEventListener(
+        "MinyamiGetCachedPageUrl",
+        () => {
+            window.dispatchEvent(new CustomEvent("MinyamiCachedPageUrl", { detail: window.location.href }));
+        },
+        false
+    );
+    window.addEventListener("unload", notify({ type: "page_url", detail: window.location.href }), false);
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "");
     };
