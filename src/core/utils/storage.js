@@ -57,10 +57,11 @@ class Storage {
     }
     static async setHistory(url, item) {
         if (setHistoryLock) {
-            setTimeout(() => {
-                Storage.setHistory(url, item);
-            }, 200);
-            return;
+            return await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    Storage.setHistory(url, item).then(resolve).catch(reject);
+                }, 200);
+            });
         }
         setHistoryLock = true;
         const history = await Storage.get("history");

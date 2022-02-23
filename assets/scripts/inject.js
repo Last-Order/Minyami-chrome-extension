@@ -6,20 +6,11 @@
         }));
     }, false);
     if (typeof exportFunction === "function") { // Firefox
-        exportFunction(msg => {
-            chrome.runtime.sendMessage(msg);
-        }, window, {
+        exportFunction(chrome.runtime.sendMessage, window, {
             defineAs: 'notifyMinyamiExtractor'
         });
     }
     const injectNode = document.createElement('script');
     injectNode.src = chrome.runtime.getURL('/assets/scripts/inject_core.js');
     document.getElementsByTagName('head')[0].prepend(injectNode);
-    const cachedUrl = location.href;
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (!sender.tab && message.type === 'get_url') {
-            sendResponse({type: 'url', detail: cachedUrl });
-            return true;
-        }
-    });
 })();

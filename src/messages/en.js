@@ -6,7 +6,7 @@ export default {
         useNPX: "Use NPX",
         save: "Save",
         noData: '"No Data"',
-        noDataTip: "Please refresh and try again if this persists (or if extension was reloaded).",
+        noDataTip: "Please refresh and try again if this persists (or if extension was just installed/updated).",
         noKeyWarning: "A key is needed to decrypt video but Minyami haven't got it. Please refresh and try again.",
         noCookieWarning: "Some cookies are needed to download but Minyami havn't got it. Please refresh and try again.",
         cookieWarning: "Your cookies are included in the generated command. Please do not share it with others.",

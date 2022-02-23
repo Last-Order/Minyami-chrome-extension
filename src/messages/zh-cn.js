@@ -6,7 +6,7 @@ export default {
         useNPX: "使用 NPX",
         save: "保存",
         noData: '"暂无数据"',
-        noDataTip: "如果持续很久没有反应 (或您刚才重新载入了扩展) 请刷新重试",
+        noDataTip: "如果持续很久没有反应 (或您刚才安装或更新了扩展) 请刷新重试",
         noKeyWarning: "该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试",
         noCookieWarning: "该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试",
         cookieWarning: "生成的命令包含您的 Cookies 请不要随意复制给他人",

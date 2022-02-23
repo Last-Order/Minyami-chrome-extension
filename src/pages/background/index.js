@@ -11,20 +11,34 @@ import en from "../../messages/en";
 
 const tabToUrl = {};
 
-const cacheTabUrl = (tabId) => new Promise((resolve) => {
+const getCachedTabUrl = (tabId) => new Promise((resolve) => {
     if (typeof tabId !== "number") return resolve();
-    chrome.tabs.sendMessage(tabId, { type: "get_url" }, (response) => {
-        if (!chrome.runtime.lastError && response && response.type === "url") {
-            tabToUrl[tabId] = response.detail;
+    chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+            let url;
+            window.addEventListener("MinyamiCachedPageUrl", (value) => {
+                url = value.detail;
+            }, { capture: false, once: true });
+            window.dispatchEvent(new CustomEvent("MinyamiGetCachedPageUrl"));
+            return url;
+        }
+    }, (results) => {
+        if (results[0].result) {
+            tabToUrl[tabId] = results[0].result;
         }
         resolve(tabToUrl[tabId]);
-    })
+    });
 });
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab || message.type === "chunklist") return;
     const tabId = sender.tab.id;
-    const url = await cacheTabUrl(tabId); // 必然回复可用值
+    if (message.type === "page_url") { // window.onunload
+        tabToUrl[tabId] = message.detail;
+        return;
+    }
+    const url = await getCachedTabUrl(tabId); // 必然回复可用值
     // console.log(message);
     if (message.type === "playlist") {
         const playlist = new Playlist({
@@ -84,16 +98,16 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     // console.log(message);
     if (message.type === "set_language") {
         for (const tab of await chrome.tabs.query({})) {
-            await cacheTabUrl(tab.id);
+            if (!urlNotSupported(tab.url)) await getCachedTabUrl(tab.id);
             await updateTabStatus(tab.id, true);
         }
         return;
     }
     if (message.type === "query_livedata") { // 浮窗页面装载
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tabs || tabs.length === 0) return;
+        if (!tabs || tabs.length === 0 || urlNotSupported(tabs[0].url)) return;
         const currentTab = tabs[0].id;
-        if (!await cacheTabUrl(currentTab)) return;
+        if (tabs[0].status !== "loading" && !await getCachedTabUrl(currentTab)) return;
         chrome.runtime.sendMessage({
             type: "update_livedata",
             tabId: currentTab,
@@ -118,6 +132,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     await Storage.removeHistory(url + "-cookies");
     // 判断是否为任意窗口的活动标签页
     if (tab.active) {
+        let currentUrlHost = "";
+        try {
+            currentUrlHost = new URL(url).host;
+        } catch { // 不支持的 URL scheme
+            return;
+        }
         chrome.runtime.sendMessage({
             type: "update_livedata",
             tabId,
@@ -126,7 +146,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
                 keys: [],
                 cookies: [],
                 currentUrl: url,
-                currentUrlHost: new URL(url).host,
+                currentUrlHost,
                 status: await getTabStatusFlags(tabId),
             }
         });
@@ -135,13 +155,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-    if (await cacheTabUrl(tabId)) {
-        const url = tabToUrl[tabId];
+    const url = tabToUrl[tabId];
+    if (url) {
         await Storage.removeHistory(url);
         await Storage.removeHistory(url + "-key");
         await Storage.removeHistory(url + "-cookies");
-        delete tabToUrl[tabId];
     }
+    delete tabToUrl[tabId];
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -153,8 +173,8 @@ chrome.runtime.onInstalled.addListener(async () => {
 const initializeTabStatuses = async (clear) => {
     for (const tab of await chrome.tabs.query({})) {
         if (clear || !(await chrome.action.getBadgeText({ tabId: tab.id }))) {
-            tabToUrl[tab.id] = tab.url;
-            await cacheTabUrl(tab.id);
+            if (clear) tabToUrl[tab.id] = tab.url;
+            if (!urlNotSupported(tab.url)) await getCachedTabUrl(tab.id);
             await updateTabStatus(tab.id, !clear);
         }
     }
@@ -233,5 +253,11 @@ const getTabStatusFlags = async (tabId) => {
     return flags;
 };
 
-const urlNotSupported = (url) =>
-    !url || !supportedSites.includes(new URL(url).host);
+const urlNotSupported = (url) => {
+    if (!url) return true;
+    try {
+        return !supportedSites.includes(new URL(url).host);
+    } catch {
+        return true;
+    }
+}

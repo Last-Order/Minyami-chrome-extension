@@ -14,7 +14,7 @@
     "icons": {
         "128": "assets/logo.png"
     },
-    "permissions": ["tabs", "storage", "webRequest"],
+    "permissions": ["tabs", "scripting", "storage", "webRequest"],
     "host_permissions": [
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
