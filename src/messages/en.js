@@ -27,7 +27,7 @@ export default {
     },
     tooltip: {
         initial: "No data available",
-        waiting: "Waiting for streams...",
+        waiting: "Waiting for more data...",
         ready: "Streams available",
         stopped: "Page not supported"
     }
