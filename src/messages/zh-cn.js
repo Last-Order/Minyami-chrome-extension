@@ -11,7 +11,7 @@ export default {
         noCookieWarning: "该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试",
         cookieWarning: "生成的命令包含您的 Cookies 请不要随意复制给他人",
         unsupportedTip: "Minyami Extrator 可能不支持此站点，但是您可以手工获取 m3u8 地址尝试使用 minyami -d <url> 下载",
-        minyamiVersionRequirementTip: "下载此站点，请将您的 Minyami 本体升级到最新版本 (>= {version})",
+        minyamiVersionRequirementTip: "下载此站点，Minyami CLI 需要的最低版本号是 {version}",
         resumeMode: "恢复模式",
         liveMode: "下载直播",
         video: "视频",
