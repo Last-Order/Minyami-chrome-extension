@@ -6,6 +6,7 @@ export default {
         useNPX: "使用 NPX",
         save: "保存",
         noData: '"暂无数据"',
+        noDataTip: "如果持续很久没有反应 (或您刚才安装或更新了扩展) 请刷新重试",
         noKeyWarning: "该站点需要传递 Key 而 Minyami 没有拿到 请刷新重试",
         noCookieWarning: "该站点需要传递 Cookies 而 Minyami 没有拿到 请刷新重试",
         cookieWarning: "生成的命令包含您的 Cookies 请不要随意复制给他人",
@@ -20,5 +21,11 @@ export default {
         trackName: "名称",
         copy: "复制",
         require: "需要"
+    },
+    tooltip: {
+        initial: "暂未获取到流",
+        waiting: "等待数据更新",
+        ready: "此页面有可用流",
+        stopped: "暂未支持此页面"
     }
 };

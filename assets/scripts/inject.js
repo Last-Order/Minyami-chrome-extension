@@ -6,9 +6,7 @@
         }));
     }, false);
     if (typeof exportFunction === "function") { // Firefox
-        exportFunction(msg => {
-            chrome.runtime.sendMessage(msg);
-        }, window, {
+        exportFunction(chrome.runtime.sendMessage, window, {
             defineAs: 'notifyMinyamiExtractor'
         });
     }

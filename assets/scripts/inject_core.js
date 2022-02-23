@@ -1,15 +1,18 @@
 (async () => {
     const MINYAMI_EXTENSION_ID = (
         await new Promise((res) => {
-            window.addEventListener("MinyamiExtId", res, false);
+            window.addEventListener("MinyamiExtId", res, { capture: false, once: true });
             window.dispatchEvent(new CustomEvent("MinyamiReady"));
         })
     ).detail;
     const notify =
-        window.notifyMinyamiExtractor ||
-        ((
-            msg // Firefox
-        ) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg)); // Chromium
+        window.notifyMinyamiExtractor /* Firefox */ ||
+        ((msg) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg));
+    let href = window.location.href;
+    window.addEventListener("MinyamiGetCachedPageUrl", () => {
+        window.dispatchEvent(new CustomEvent("MinyamiCachedPageUrl", { detail: href }));
+    }, false);
+    window.addEventListener("unload", notify({ type: "page_url", detail: href }), false);
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "");
     };

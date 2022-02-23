@@ -21,25 +21,26 @@
                 </el-form>
             </el-card>
         </div>
-        <el-card v-if="playlists.length === 0" shadow="never">
-            <div style="text-align: center">{{ $t("message.noData") }}</div>
+        <el-card style="text-align: center" v-if="playlists.length === 0" shadow="never">
+            <div style="font-size: larger">{{ $t("message.noData") }}</div>
+            <div style="margin-top: 10px; opacity: .5">{{ $t('message.noDataTip') }}</div>
         </el-card>
-        <el-card v-if="showNoKeyWarning()" shadow="never">
+        <el-card v-if="status.missingKey" shadow="never">
             <el-alert :title="$t('message.noKeyWarning')" type="error"></el-alert>
         </el-card>
-        <el-card v-if="showNoCookiesWarning()" shadow="never">
+        <el-card v-if="status.missingCookie" shadow="never">
             <el-alert :title="$t('message.noCookieWarning')" type="error"></el-alert>
         </el-card>
-        <el-card v-if="showCookieWarning()" shadow="never">
+        <el-card v-if="cookies.length > 0" shadow="never">
             <el-alert :title="$t('message.cookieWarning')" type="warning"></el-alert>
         </el-card>
-        <el-card v-if="showMinyamiVersionRequirementTip()" shadow="never">
+        <el-card v-if="showMinyamiVersionRequirementTip" shadow="never">
             <el-alert
-                :title="$t('message.minyamiVersionRequirementTip', { version: showMinyamiVersionRequirementTip() })"
-                type="warning"
+                :title="$t('message.minyamiVersionRequirementTip', { version: showMinyamiVersionRequirementTip })"
+                type="info"
             ></el-alert>
         </el-card>
-        <el-card v-if="showNotSupported()" shadow="never">
+        <el-card v-if="!status.supported" shadow="never">
             <el-alert :title="$t('message.unsupportedTip')" type="error"></el-alert>
         </el-card>
         <el-card class="playlist-item" v-for="(playlist, index) in playlists" :key="playlist.url" shadow="never">
@@ -148,13 +149,12 @@
 <script>
 import Storage from "../../core/utils/storage.js";
 import {
-    supportedSites,
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
     siteThreadsSettings,
-    needCookiesSites,
-    needKeySites
+    parseStatusFlags
 } from "../../definitions";
+const dataFields = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
 export default {
     data() {
         return {
@@ -169,35 +169,57 @@ export default {
                 threads: "",
                 useNPX: false
             },
+            currentTab: undefined,
             currentUrl: "",
-            showConfig: false
+            currentUrlHost: "",
+            showConfig: false,
+            statusFlags: 0
         };
     },
     computed: {
-        currentUrlHost: function() {
-            return this.currentUrl && new URL(this.currentUrl).host;
+        showMinyamiVersionRequirementTip: function() {
+            return minyamiVersionRequirementMap[this.currentUrlHost];
+        },
+        status: {
+            set: function(flags) {
+                this.statusFlags = flags;
+            },
+            get: function() {
+                return parseStatusFlags(this.statusFlags);
+            }
         }
     },
     async mounted() {
         this.configForm.threads = await Storage.getConfig("threads");
         this.configForm.useNPX = await Storage.getConfig("useNPX");
-        this.check();
-        this.getKeys();
-        this.getCookies();
-        chrome.storage.local.onChanged.addListener(() => {
-            this.check();
-            this.getKeys();
-            this.getCookies();
-        });
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs || tabs.length === 0) return;
+        this.currentTab = tabs[0].id;
+        chrome.runtime.onMessage.addListener(this.handleDataUpdate);
+        chrome.runtime.sendMessage({ type: "query_livedata" });
+    },
+    unmounted() {
+        if (!this.currentTab) return;
+        chrome.runtime.onMessage.removeListener(this.handleDataUpdate);
     },
     methods: {
-        check() {
-            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-                if (tabs[0]) {
-                    this.playlists = await Storage.getHistory(tabs[0].url);
-                    this.currentUrl = tabs[0].url;
+        async handleDataUpdate(message) {
+            // console.log(message);
+            if (message.type === "set_language") {
+                this.$i18n.locale = await Storage.getConfig("language");
+            }
+            if (message.type === "save_config") {
+                this.configForm.threads = await Storage.getConfig("threads");
+                this.configForm.useNPX = await Storage.getConfig("useNPX");
+            }
+            if (message.type === "update_livedata") {
+                if (message.tabId !== this.currentTab) return;
+                for (const field of dataFields) {
+                    if (field in message.detail) {
+                        this[field] = message.detail[field];
+                    }
                 }
-            });
+            }
         },
         generateCommand(chunklist, playlist, index) {
             const prefix = this.configForm.useNPX ? "npx minyami" : "minyami";
@@ -233,76 +255,19 @@ export default {
             input[0].select();
             document.execCommand("copy");
         },
-        getKeys() {
-            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-                if (tabs[0]) {
-                    const keys = await Storage.getHistory(tabs[0].url + "-key");
-                    if (keys && keys.length > 0) {
-                        this.keys = keys;
-                    }
-                }
-            });
-        },
-        getCookies() {
-            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-                if (tabs[0]) {
-                    const cookies = await Storage.getHistory(tabs[0].url + "-cookies");
-                    if (cookies && cookies.length > 0) {
-                        this.cookies = cookies;
-                    }
-                }
-            });
-        },
-        showNoKeyWarning() {
-            if (!this.currentUrl) {
-                return false;
-            }
-            for (const site of needKeySites) {
-                if (this.currentUrl.includes(site) && this.keys.length === 0) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        showNoCookiesWarning() {
-            if (!this.currentUrl) {
-                return false;
-            }
-            for (const site of needCookiesSites) {
-                if (this.currentUrl.includes(site) && this.cookies.length === 0) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        showCookieWarning() {
-            if (!this.currentUrl) {
-                return false;
-            }
-            for (const site of needCookiesSites) {
-                if (this.currentUrl.includes(site) && this.cookies.length === 0) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        showNotSupported() {
-            return !this.currentUrl || !supportedSites.includes(this.currentUrlHost);
-        },
-        showMinyamiVersionRequirementTip() {
-            return minyamiVersionRequirementMap[this.currentUrlHost];
-        },
         async saveConfig() {
             const threads = this.configForm.threads;
             const useNPX = this.configForm.useNPX;
             await Storage.setConfig("threads", threads);
             await Storage.setConfig("useNPX", useNPX);
             this.showConfig = false;
+            chrome.runtime.sendMessage({ type: "save_config" });
         },
         async changeLanguage() {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
             await Storage.setConfig("language", targetLanguage);
             this.$i18n.locale = targetLanguage;
+            chrome.runtime.sendMessage({ type: "set_language" });
         }
     }
 };

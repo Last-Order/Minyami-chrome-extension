@@ -46,3 +46,15 @@ export const minyamiVersionRequirementMap = {
     "twitcasting.tv": "4.2.10",
     "nicochannel.jp": "4.4.13"
 };
+export const statusFlags = {
+    supported: 0b1,
+    missingCookie: 0b10,
+    missingKey: 0b100
+};
+export const parseStatusFlags = (flags) => {
+    const status = {};
+    for (const flag in statusFlags) {
+        status[flag] = Boolean(statusFlags[flag] & flags);
+    }
+    return Object.freeze(status);
+};
