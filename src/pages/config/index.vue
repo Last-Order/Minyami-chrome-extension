@@ -193,18 +193,18 @@ export default {
         this.configForm.threads = await Storage.getConfig("threads");
         this.configForm.useNPX = await Storage.getConfig("useNPX");
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tabs || tabs.length === 0) return;
-        this.currentTab = tabs[0].id;
+        if (tabs.length === 0) return;
+        const tabId = this.currentTab = tabs[0].id;
         chrome.runtime.onMessage.addListener(this.handleDataUpdate);
-        chrome.runtime.sendMessage({ type: "query_livedata" });
+        chrome.runtime.sendMessage({ type: "query_livedata", tabId });
     },
     unmounted() {
         if (!this.currentTab) return;
         chrome.runtime.onMessage.removeListener(this.handleDataUpdate);
     },
     methods: {
-        async handleDataUpdate(message) {
-            // console.log(message);
+        async handleDataUpdate(message, sender) {
+            // console.log(message, sender);
             if (message.type === "set_language") {
                 this.$i18n.locale = await Storage.getConfig("language");
             }
