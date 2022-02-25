@@ -17,10 +17,10 @@ const getCachedTabUrl = (tabId) => new Promise((resolve) => {
         target: { tabId },
         func: () => {
             let url;
-            window.addEventListener("MinyamiCachedPageUrl", (value) => {
+            window.addEventListener("MinyamiPageUrl", (value) => {
                 url = value.detail;
             }, { capture: false, once: true });
-            window.dispatchEvent(new CustomEvent("MinyamiGetCachedPageUrl"));
+            window.dispatchEvent(new CustomEvent("MinyamiGetPageUrl"));
             return url;
         }
     }, (results) => {
@@ -30,12 +30,24 @@ const getCachedTabUrl = (tabId) => new Promise((resolve) => {
         resolve(tabToUrl[tabId]);
     });
 });
+
+let currentExtTab;
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab || message.type === "chunklist") return;
+    if (message.type === "query_livedata") { // /* 移动端浏览器弹窗标签页
+        currentExtTab = sender.tab.id;
+        return handleLiveDataQuery(message, sender);
+    }
+    if (message.type === "save_config" || message.type === "set_language") {
+        for (const tab of await chrome.tabs.query({ url: sender.tab.url })) {
+            if (tab.id === sender.tab.id) continue;
+            chrome.tabs.sendMessage(tab.id, message);
+        }
+    }                                        // */
     const tabId = sender.tab.id;
     if (message.type === "page_url") { // window.onunload
-        tabToUrl[tabId] = message.detail;
+        tabToUrl[tabId] = message.url;
         return;
     }
     const url = await getCachedTabUrl(tabId); // 必然回复可用值
@@ -74,8 +86,10 @@ const handleContentScriptMessage = async (message, sender) => {
         }
     }
     // 实时更新浮窗页面数据
-    if (sender.tab.active) {
-        chrome.runtime.sendMessage({
+    const sendMessage = sender.tab.active ? chrome.runtime.sendMessage :
+        currentExtTab && ((msg) => chrome.tabs.sendMessage(currentExtTab, msg));
+    if (sendMessage) {
+        sendMessage({
             type: "update_livedata",
             tabId,
             detail: {
@@ -93,9 +107,29 @@ chrome.runtime.onMessageExternal.addListener(handleContentScriptMessage);
 // Firefox
 chrome.runtime.onMessage.addListener(handleContentScriptMessage);
 // 处理浮窗页面消息
+const handleLiveDataQuery = async (message, sender) => {
+    // console.log(message, sender);
+    const sendMessage = sender.tab ?
+        (msg) => chrome.tabs.sendMessage(sender.tab.id, msg) : chrome.runtime.sendMessage;
+    const tab = await chrome.tabs.get(message.tabId);
+    if (!tab || urlNotSupported(tab.url)) return;
+    if (tab.status !== "loading" && !await getCachedTabUrl(tab.id)) return;
+    sendMessage({
+        type: "update_livedata",
+        tabId: tab.id,
+        detail: {
+            playlists: await getTabPlaylists(tab.id),
+            keys: await getTabKeys(tab.id),
+            cookies: await getTabCookies(tab.id),
+            currentUrl: tabToUrl[tab.id],
+            currentUrlHost: new URL(tabToUrl[tab.id]).host,
+            status: await getTabStatusFlags(tab.id)
+        }
+    });
+};
+
 chrome.runtime.onMessage.addListener(async (message, sender) => {
     if (sender.tab) return;
-    // console.log(message);
     if (message.type === "set_language") {
         for (const tab of await chrome.tabs.query({})) {
             if (!urlNotSupported(tab.url)) await getCachedTabUrl(tab.id);
@@ -103,23 +137,8 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
         }
         return;
     }
-    if (message.type === "query_livedata") { // 浮窗页面装载
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tabs || tabs.length === 0 || urlNotSupported(tabs[0].url)) return;
-        const currentTab = tabs[0].id;
-        if (tabs[0].status !== "loading" && !await getCachedTabUrl(currentTab)) return;
-        chrome.runtime.sendMessage({
-            type: "update_livedata",
-            tabId: currentTab,
-            detail: {
-                playlists: await getTabPlaylists(currentTab),
-                keys: await getTabKeys(currentTab),
-                cookies: await getTabCookies(currentTab),
-                currentUrl: tabToUrl[currentTab],
-                currentUrlHost: new URL(tabToUrl[currentTab]).host,
-                status: await getTabStatusFlags(currentTab)
-            }
-        });
+    if (message.type === "query_livedata" && message.tabId) { // 浮窗页面装载
+        await handleLiveDataQuery(message, sender);
     }
 });
 // 监视新建或刷新标签页
@@ -155,6 +174,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
+    if (tabId === currentExtTab) return currentExtTab = undefined;
     const url = tabToUrl[tabId];
     if (url) {
         await Storage.removeHistory(url);

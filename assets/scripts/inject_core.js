@@ -8,13 +8,13 @@
     const notify =
         window.notifyMinyamiExtractor /* Firefox */ || ((msg) => chrome.runtime.sendMessage(MINYAMI_EXTENSION_ID, msg));
     window.addEventListener(
-        "MinyamiGetCachedPageUrl",
+        "MinyamiGetPageUrl",
         () => {
-            window.dispatchEvent(new CustomEvent("MinyamiCachedPageUrl", { detail: window.location.href }));
+            window.dispatchEvent(new CustomEvent("MinyamiPageUrl", { detail: window.location.href }));
         },
         false
     );
-    window.addEventListener("unload", notify({ type: "page_url", detail: window.location.href }), false);
+    window.addEventListener("unload", notify({ type: "page_url", url: window.location.href }), false);
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "");
     };
