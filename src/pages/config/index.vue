@@ -261,12 +261,14 @@ export default {
             await Storage.setConfig("threads", threads);
             await Storage.setConfig("useNPX", useNPX);
             this.showConfig = false;
+            if (await chrome.tabs.getCurrent()) return;
             chrome.runtime.sendMessage({ type: "save_config" });
         },
         async changeLanguage() {
             const targetLanguage = this.$i18n.locale === "en" ? "zh_CN" : "en";
             await Storage.setConfig("language", targetLanguage);
             this.$i18n.locale = targetLanguage;
+            if (await chrome.tabs.getCurrent()) return;
             chrome.runtime.sendMessage({ type: "set_language" });
         }
     }
