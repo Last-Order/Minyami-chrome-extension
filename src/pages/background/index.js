@@ -35,10 +35,16 @@ let currentExtTab;
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab || message.type === "chunklist") return;
-    if (message.type === "query_livedata") { // 移动端浏览器弹窗标签页
+    if (message.type === "query_livedata") { // /* 移动端浏览器弹窗标签页
         currentExtTab = sender.tab.id;
         return handleLiveDataQuery(message, sender);
     }
+    if (message.type === "save_config" || message.type === "set_language") {
+        for (const tab of await chrome.tabs.query({ url: sender.tab.url })) {
+            if (tab.id === sender.tab.id) continue;
+            chrome.tabs.sendMessage(tab.id, message);
+        }
+    }                                        // */
     const tabId = sender.tab.id;
     if (message.type === "page_url") { // window.onunload
         tabToUrl[tabId] = message.url;
