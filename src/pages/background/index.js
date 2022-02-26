@@ -34,7 +34,7 @@ const getCachedTabUrl = (tabId) => new Promise((resolve) => {
 let currentExtTab;
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
-    if (!sender.tab || message.type === "chunklist") return;
+    if (!sender.tab) return;
     if (message.type === "query_livedata") { // /* 移动端浏览器弹窗标签页
         currentExtTab = sender.tab.id;
         return handleLiveDataQuery(message, sender);
@@ -59,9 +59,32 @@ const handleContentScriptMessage = async (message, sender) => {
             title: message.title,
             streamName: message.streamName
         });
-        if (!(await Storage.getHistory(url)).some((p) => p.url === playlist.url)) {
-            await Storage.setHistory(url, playlist);
+        await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
+    }
+    if (message.type === "chunklist") {
+        if (message.keyUrl) {
+            const keyIndexMap = {};
+            for (const playlist of await Storage.getHistory(url)) {
+                let modded = false;
+                for (const chunklist of playlist.chunkLists) {
+                    if (chunklist.keyIndex !== undefined) {
+                        keyIndexMap[chunklist.keyUrl] = chunklist.keyIndex;
+                        continue;
+                    }
+                    if (chunklist.url === message.url) {
+                        modded = true;
+                        chunklist.keyUrl = message.keyUrl;
+                        if (chunklist.keyUrl in keyIndexMap) {
+                            chunklist.keyIndex = keyIndexMap[chunklist.keyUrl];
+                        }
+                    }
+                }
+                if (!modded) continue;
+                await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
+            }
+            await doUpdateTabStatus(tabId);
         }
+        return;
     }
     if (message.type === "playlist_chunklist") {
         const playlist = new Playlist({
@@ -71,19 +94,23 @@ const handleContentScriptMessage = async (message, sender) => {
             disableAutoParse: true
         });
         playlist.chunkLists = message.chunkLists;
-        if (!(await Storage.getHistory(url)).some((p) => p.url === playlist.url)) {
-            await Storage.setHistory(url, playlist);
-        }
+        await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
     if (message.type === "key") {
-        if (!(await Storage.getHistory(url + "-key")).includes(message.key)) {
-            await Storage.setHistory(url + "-key", message.key);
+        const nextIndex = (await Storage.getHistory(url + "-key")).length;
+        await Storage.addHistory(url + "-key", message.key);
+        if (nextIndex === (await Storage.getHistory(url + "-key")).length) return;
+        for (const playlist of await Storage.getHistory(url)) {
+            for (const chunklist of playlist.chunkLists) {
+                if (chunklist.keyIndex !== undefined ||
+                    chunklist.keyUrl && (chunklist.keyUrl !== message.url)) continue;
+                chunklist.keyIndex = nextIndex;
+            }
+            await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
         }
     }
     if (message.type === "cookies") {
-        if (!(await Storage.getHistory(url + "-cookies")).includes(message.cookies)) {
-            await Storage.setHistory(url + "-cookies", message.cookies);
-        }
+        await Storage.addHistory(url + "-cookies", message.cookies);
     }
     // 实时更新浮窗页面数据
     const sendMessage = sender.tab.active ? chrome.runtime.sendMessage :
@@ -93,9 +120,9 @@ const handleContentScriptMessage = async (message, sender) => {
             type: "update_livedata",
             tabId,
             detail: {
-                ...(message.type == "key" ? { keys: await getTabKeys(tabId) } :
-                        message.type == "cookies" ? { cookies: await getTabCookies(tabId) } :
-                            { playlists: await getTabPlaylists(tabId) }),
+                ...(message.type === "key" && { keys: await getTabKeys(tabId) }),
+                ...(message.type === "cookies" && { cookies: await getTabCookies(tabId) }),
+                ...(message.type !== "cookies" && { playlists: await getTabPlaylists(tabId) }),
                 status: await getTabStatusFlags(tabId)
             }
         });
@@ -227,7 +254,12 @@ const doUpdateTabStatus = async (tabId) => {
 };
 
 const setTabStatus = async (tabId, status) => {
-    const streamCount = (await getTabPlaylists(tabId)).length.toString();
+    const playlists = await getTabPlaylists(tabId);
+    const total = playlists.length;
+    const done = playlists.filter((p) =>
+        p.chunkLists.some((c) => "keyIndex" in c)
+    ).length;
+    const streamCount = (done && (done !== total) ? `${done}/` : "") + `${total}`;
     const [color, text] = {
         initial: ["#1966b3", "?"],
         stopped: ["#a9a9a9", "-"],

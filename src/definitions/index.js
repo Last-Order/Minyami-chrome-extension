@@ -12,6 +12,7 @@ export const supportedSites = [
     "twitcasting.tv",
     "www.showroom-live.com",
     "hibiki-radio.jp",
+    "www.onsen.ag",
     "www.youtube.com",
     "nogidoga.com",
     "stagecrowd.live",
@@ -29,9 +30,13 @@ export const needKeySites = [
     "dmm.com",
     "dmm.co.jp",
     "hibiki-radio.jp",
+    "www.onsen.ag",
     "nicochannel.jp"
 ];
 export const siteAdditionalHeaders = {
+    "www.onsen.ag": {
+        Referer: "https://www.onsen.ag/"
+    },
     "twitcasting.tv": {
         Referer: "https://twitcasting.tv/",
         "User-Agent": navigator.userAgent

@@ -94,6 +94,7 @@
                         </el-form-item>
                         <el-form-item class="playlist-chunklist-command">
                             <el-input
+                                :disabled="noKey(chunkList)"
                                 size="mini"
                                 :value="generateCommand(chunkList, playlist, index)"
                                 :ref="chunkList.url"
@@ -101,7 +102,9 @@
                         </el-form-item>
                         <el-form-item>
                             <div>
-                                <el-button size="small" @click="copy(chunkList)">{{ $t("message.copy") }}</el-button>
+                                <el-button :disabled="noKey(chunkList)" size="small" @click="copy(chunkList)">
+                                    {{ noKey(chunkList) ? $t("message.noKey") : $t("message.copy") }}
+                                </el-button>
                             </div>
                         </el-form-item>
                     </el-form>
@@ -204,7 +207,7 @@ export default {
     },
     methods: {
         async handleDataUpdate(message, sender) {
-            // console.log(message, sender);
+            console.log(message, sender);
             if (message.type === "set_language") {
                 this.$i18n.locale = await Storage.getConfig("language");
             }
@@ -229,8 +232,8 @@ export default {
             } else {
                 command += `${prefix} -r "${chunklist.url}"`;
             }
-            if (this.keys.length > 0) {
-                command += ` --key "${this.keys[index] || this.keys[0]}"`;
+            if ("keyIndex" in chunklist) {
+                command += ` --key "${this.keys[chunklist.keyIndex]}"`;
             }
             if (this.cookies.length > 0) {
                 command += ` --headers "Cookie: ${this.cookies[index] || this.cookies[0]}"`;
@@ -249,6 +252,9 @@ export default {
                 command += ` --threads ${this.configForm.threads}`;
             }
             return command;
+        },
+        noKey(chunkList) {
+            return "keyUrl" in chunkList && !("keyIndex" in chunkList);
         },
         copy(chunkList) {
             const input = this.$refs[chunkList.url];

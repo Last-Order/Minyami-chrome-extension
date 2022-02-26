@@ -7,6 +7,7 @@ export default {
         save: "Save",
         noData: '"No Data"',
         noDataTip: "Please refresh and try again if this persists (or if extension was just installed/updated).",
+        noKey: "Missing Key",
         noKeyWarning: "A key is needed to decrypt video but Minyami haven't got it. Please refresh and try again.",
         noCookieWarning:
             "Some cookies are needed to download but Minyami haven't got it. Please refresh and try again.",

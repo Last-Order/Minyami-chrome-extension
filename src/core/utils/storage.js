@@ -24,6 +24,13 @@ class Storage {
         });
     }
     static async getHistory(url) {
+        if (setHistoryLock) {
+            return await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    Storage.getHistory(url).then(resolve).catch(reject);
+                }, 200);
+            });
+        }
         const history = await Storage.get("history");
         if (!history) {
             return [];
@@ -36,6 +43,13 @@ class Storage {
         }
     }
     static async removeHistory(url) {
+        if (setHistoryLock) {
+            return await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    Storage.removeHistory(url).then(resolve).catch(reject);
+                }, 200);
+            });
+        }
         const history = await Storage.get("history");
         if (!history) {
             await Storage.set("history", JSON.stringify({}));
@@ -55,11 +69,29 @@ class Storage {
             return true;
         }
     }
-    static async setHistory(url, item) {
+    static async addHistory(url, item, dupTester) {
+        return await this.setHistory(url, item, (array) => {
+            if (!array.includes(item) &&
+            (typeof dupTester !== "function" || !array.some(dupTester))) {
+                array.push(item);
+            }
+        });
+    }
+    static async modHistory(url, item, targetTester) {
+        return await this.setHistory(url, item, (array) => {
+            if (!array.includes(item) && typeof targetTester === "function") {
+                const index = array.findIndex(targetTester);
+                if (index > -1) {
+                    array[index] = item;
+                }
+            }
+        });
+    }
+    static async setHistory(url, item, historyArrayAction) {
         if (setHistoryLock) {
             return await new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    Storage.setHistory(url, item).then(resolve).catch(reject);
+                    Storage.setHistory(url, item, historyArrayAction).then(resolve).catch(reject);
                 }, 200);
             });
         }
@@ -74,12 +106,8 @@ class Storage {
         }
         try {
             const parsedHistory = JSON.parse(history);
-            if (parsedHistory[url]) {
-                if (Array.isArray(parsedHistory[url]) && !parsedHistory[url].includes(item)) {
-                    parsedHistory[url].push(item);
-                } else {
-                    parsedHistory[url] = [item];
-                }
+            if (parsedHistory[url] && Array.isArray(parsedHistory[url])) {
+                historyArrayAction(parsedHistory[url]);
             } else {
                 parsedHistory[url] = [item];
             }
