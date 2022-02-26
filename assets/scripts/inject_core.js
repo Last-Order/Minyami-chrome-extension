@@ -406,18 +406,6 @@
             abema();
             break;
         }
-        case "hibiki-radio.jp": {
-            hibiki();
-            break;
-        }
-        case "www.dmm.com": {
-            dmm();
-            break;
-        }
-        case "www.dmm.co.jp": {
-            dmm_r18();
-            break;
-        }
         case "twitcasting.tv": {
             twicas();
             break;
