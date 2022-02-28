@@ -83,7 +83,9 @@ class Storage {
             if (!array.includes(item) &&
             (typeof dupTester !== "function" || !array.some(dupTester))) {
                 array.push(item);
+                return true;
             }
+            return false;
         });
     }
     static async modHistory(url, item, targetTester) {
@@ -92,8 +94,10 @@ class Storage {
                 const index = array.findIndex(targetTester);
                 if (index > -1) {
                     array[index] = item;
+                    return true;
                 }
             }
+            return false;
         });
     }
     static async setHistory(url, item, historyArrayAction) {
@@ -107,16 +111,16 @@ class Storage {
             }    
             const parsedHistory = JSON.parse(history);
             if (parsedHistory[url] && Array.isArray(parsedHistory[url])) {
-                historyArrayAction(parsedHistory[url]);
+                if (!historyArrayAction(parsedHistory[url])) {
+                    return false;
+                }
             } else {
                 parsedHistory[url] = [item];
             }
             await Storage.set("history", JSON.stringify(parsedHistory));
             return true;
         } catch (e) {
-            const newHistory = {};
-            newHistory[url] = [item];
-            await await Storage.set("history", JSON.stringify(newHistory));
+            await Storage.set("history", JSON.stringify({ url: [item] }));
             return true;
         } finally {
             queue.leave();
@@ -140,13 +144,10 @@ class Storage {
         const config = await Storage.get("config");
         try {
             if (!config) {
-                await Storage.set("config", { [key]: value });
+                return await Storage.set("config", { [key]: value });
             }
             config[key] = value;
-            await Storage.set("config", {
-                ...config,
-                [key]: value
-            });
+            await Storage.set("config", config);
         } catch (e) {
             await Storage.set("config", { [key]: value });
         } finally {
