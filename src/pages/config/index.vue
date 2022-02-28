@@ -207,7 +207,7 @@ export default {
     },
     methods: {
         async handleDataUpdate(message, sender) {
-            console.log(message, sender);
+            // console.log(message, sender);
             if (message.type === "set_language") {
                 this.$i18n.locale = await Storage.getConfig("language");
             }
