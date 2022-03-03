@@ -1,4 +1,23 @@
-let setHistoryLock = false;
+class WaitQueue {
+    constructor() {
+        this.queue = Promise.resolve();
+    }
+    check() {
+        return { end: this.queue };
+    }
+    join() {
+        let release;
+        const nextPromise = new Promise((resolve) => {
+            release = resolve;
+        });
+        const end = this.queue;
+        this.queue = this.queue.then(() => nextPromise);
+        return { end, leave: () => release() };
+    }
+}
+
+const historyQueue = new WaitQueue();
+const configQueue = new WaitQueue();
 
 class Storage {
     static async clear() {
@@ -24,11 +43,11 @@ class Storage {
         });
     }
     static async getHistory(url) {
+        const queue = historyQueue.check();
+        await queue.end;
         const history = await Storage.get("history");
-        if (!history) {
-            return [];
-        }
         try {
+            if (!history) return [];
             const parsedHistory = JSON.parse(history);
             return parsedHistory[url] || [];
         } catch (e) {
@@ -36,12 +55,14 @@ class Storage {
         }
     }
     static async removeHistory(url) {
+        const queue = historyQueue.join();
+        await queue.end;
         const history = await Storage.get("history");
-        if (!history) {
-            await Storage.set("history", JSON.stringify({}));
-            return true;
-        }
         try {
+            if (!history) {
+                await Storage.set("history", JSON.stringify({}));
+                return true;
+            }
             const parsedHistory = JSON.parse(history);
             if (parsedHistory[url]) {
                 delete parsedHistory[url];
@@ -53,32 +74,45 @@ class Storage {
         } catch (e) {
             await Storage.set("history", JSON.stringify({}));
             return true;
+        } finally {
+            queue.leave();
         }
     }
-    static async setHistory(url, item) {
-        if (setHistoryLock) {
-            return await new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    Storage.setHistory(url, item).then(resolve).catch(reject);
-                }, 200);
-            });
-        }
-        setHistoryLock = true;
+    static async addHistory(url, item, dupTester) {
+        return await this.setHistory(url, item, (array) => {
+            if (!array.includes(item) &&
+            (typeof dupTester !== "function" || !array.some(dupTester))) {
+                array.push(item);
+                return true;
+            }
+            return false;
+        });
+    }
+    static async modHistory(url, item, targetTester) {
+        return await this.setHistory(url, item, (array) => {
+            if (!array.includes(item) && typeof targetTester === "function") {
+                const index = array.findIndex(targetTester);
+                if (index > -1) {
+                    array[index] = item;
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    static async setHistory(url, item, historyArrayAction) {
+        const queue = historyQueue.join();
+        await queue.end;
         const history = await Storage.get("history");
-        if (!history) {
-            const newHistory = {
-                url: [item]
-            };
-            await Storage.set("history", JSON.stringify(newHistory));
-            return true;
-        }
         try {
+            if (!history) {
+                await Storage.set("history", JSON.stringify({ url: [item] }));
+                return true;
+            }    
             const parsedHistory = JSON.parse(history);
-            if (parsedHistory[url]) {
-                if (Array.isArray(parsedHistory[url]) && !parsedHistory[url].includes(item)) {
-                    parsedHistory[url].push(item);
-                } else {
-                    parsedHistory[url] = [item];
+            if (parsedHistory[url] && Array.isArray(parsedHistory[url])) {
+                if (!historyArrayAction(parsedHistory[url])) {
+                    return false;
                 }
             } else {
                 parsedHistory[url] = [item];
@@ -86,20 +120,18 @@ class Storage {
             await Storage.set("history", JSON.stringify(parsedHistory));
             return true;
         } catch (e) {
-            const newHistory = {};
-            newHistory[url] = [item];
-            await await Storage.set("history", JSON.stringify(newHistory));
+            await Storage.set("history", JSON.stringify({ url: [item] }));
             return true;
         } finally {
-            setHistoryLock = false;
+            queue.leave();
         }
     }
     static async getConfig(key) {
+        const queue = configQueue.check();
+        await queue.end;
         const config = await Storage.get("config");
-        if (!config) {
-            return undefined;
-        }
         try {
+            if (!config) return undefined;
             return config[key];
         } catch (e) {
             await Storage.set("config", {});
@@ -107,18 +139,19 @@ class Storage {
         }
     }
     static async setConfig(key, value) {
+        const queue = configQueue.join();
+        await queue.end;
         const config = await Storage.get("config");
-        if (!config) {
-            await Storage.set("config", { [key]: value });
-        }
         try {
+            if (!config) {
+                return await Storage.set("config", { [key]: value });
+            }
             config[key] = value;
-            await Storage.set("config", {
-                ...config,
-                [key]: value
-            });
+            await Storage.set("config", config);
         } catch (e) {
             await Storage.set("config", { [key]: value });
+        } finally {
+            queue.leave();
         }
     }
 }
