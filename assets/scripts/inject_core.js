@@ -29,7 +29,7 @@
                         return res.clone();
                     })
                     .then(async (r) => {
-                        if (r.url.match(/.m3u8(\?|$)/)) {
+                        if (r.url.match(/\.m3u8(\?|$)/)) {
                             const responseText = await r.text();
                             let title = escapeFilename(document.title);
                             let streamName;
@@ -90,7 +90,7 @@
     XMLHttpRequest.prototype.open = XMLHttpRequest.prototype.open;
     const listen = function () {
         this.addEventListener("load", function () {
-            if (this.responseURL.match(/.m3u8(\?|$)/)) {
+            if (this.responseURL.match(/\.m3u8(\?|$)/)) {
                 console.log(this.responseURL);
             }
             if (this.readyState === 4 && new URL(this.responseURL).pathname.endsWith("m3u8")) {
