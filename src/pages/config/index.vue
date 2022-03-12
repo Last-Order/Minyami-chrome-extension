@@ -23,7 +23,7 @@
         </div>
         <el-card style="text-align: center" v-if="playlists.length === 0" shadow="never">
             <div style="font-size: larger">{{ $t("message.noData") }}</div>
-            <div style="margin-top: 10px; opacity: .5">{{ $t('message.noDataTip') }}</div>
+            <div style="margin-top: 10px; opacity: .5">{{ $t("message.noDataTip") }}</div>
         </el-card>
         <el-card v-if="status.missingKey" shadow="never">
             <el-alert :title="$t('message.noKeyWarning')" type="error"></el-alert>
@@ -155,7 +155,8 @@ import {
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
     siteThreadsSettings,
-    parseStatusFlags
+    parseStatusFlags,
+    needKeySites
 } from "../../definitions";
 const dataFields = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
 export default {
@@ -197,7 +198,7 @@ export default {
         this.configForm.useNPX = await Storage.getConfig("useNPX");
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tabs.length === 0) return;
-        const tabId = this.currentTab = tabs[0].id;
+        const tabId = (this.currentTab = tabs[0].id);
         chrome.runtime.onMessage.addListener(this.handleDataUpdate);
         chrome.runtime.sendMessage({ type: "query_livedata", tabId });
     },
@@ -254,7 +255,10 @@ export default {
             return command;
         },
         noKey(chunkList) {
-            return this.status.missingKey || "keyUrl" in chunkList && !("keyIndex" in chunkList);
+            return (
+                needKeySites.some((site) => this.currentUrlHost.includes(site)) &&
+                (this.status.missingKey || ("keyUrl" in chunkList && !("keyIndex" in chunkList)))
+            );
         },
         copy(chunkList) {
             const input = this.$refs[chunkList.url];
