@@ -155,8 +155,7 @@ import {
     minyamiVersionRequirementMap,
     siteAdditionalHeaders,
     siteThreadsSettings,
-    parseStatusFlags,
-    needKeySites
+    parseStatusFlags
 } from "../../definitions";
 const dataFields = ["playlists", "keys", "cookies", "currentUrl", "currentUrlHost", "status"];
 export default {
@@ -198,7 +197,7 @@ export default {
         this.configForm.useNPX = await Storage.getConfig("useNPX");
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tabs.length === 0) return;
-        const tabId = (this.currentTab = tabs[0].id);
+        const tabId = this.currentTab = tabs[0].id;
         chrome.runtime.onMessage.addListener(this.handleDataUpdate);
         chrome.runtime.sendMessage({ type: "query_livedata", tabId });
     },
@@ -255,10 +254,7 @@ export default {
             return command;
         },
         noKey(chunkList) {
-            return (
-                needKeySites.some((site) => this.currentUrlHost.includes(site)) &&
-                (this.status.missingKey || ("keyUrl" in chunkList && !("keyIndex" in chunkList)))
-            );
+            return this.status.missingKey || "keyUrl" in chunkList && !("keyIndex" in chunkList);
         },
         copy(chunkList) {
             const input = this.$refs[chunkList.url];

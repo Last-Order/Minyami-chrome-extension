@@ -61,8 +61,8 @@ const handleContentScriptMessage = async (message, sender) => {
         });
         await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
-    if (message.type === "chunklist") {
-        if (message.keyUrl) {
+    if (message.type === "chunklist") { // 判断是否需要截获 key 而不是直接交由本体下载
+        if (message.keyUrl && needKeySites.some((site) => url.includes(site))) {
             const keyIndexMap = {};
             for (const playlist of await Storage.getHistory(url)) {
                 let modded = false;
@@ -140,7 +140,13 @@ const handleLiveDataQuery = async (message, sender) => {
         (msg) => chrome.tabs.sendMessage(sender.tab.id, msg) : chrome.runtime.sendMessage;
     const tab = await chrome.tabs.get(message.tabId);
     if (!tab || urlNotSupported(tab.url)) return;
-    if (tab.status !== "loading" && !await getCachedTabUrl(tab.id)) return;
+    if (tab.status !== "loading" && !await getCachedTabUrl(tab.id)) return sendMessage({
+        type: "update_livedata",
+        tabId: tab.id,
+        detail: {
+            status: statusFlags.supported
+        }
+    });
     sendMessage({
         type: "update_livedata",
         tabId: tab.id,
@@ -295,11 +301,13 @@ const getTabStatusFlags = async (tabId) => {
     for (const site of needKeySites) {
         if (url.includes(site) && !(await getTabKeys(tabId)).length) {
             flags |= statusFlags.missingKey;
+            break;
         }
     }
     for (const site of needCookiesSites) {
         if (url.includes(site) && !(await getTabCookies(tabId)).length) {
             flags |= statusFlags.missingCookie;
+            break;
         }
     }
     return flags;
