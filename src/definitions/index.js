@@ -31,7 +31,8 @@ export const needKeySites = [
     "dmm.co.jp",
     "hibiki-radio.jp",
     "www.onsen.ag",
-    "nicochannel.jp"
+    "nicochannel.jp",
+    "pizzaradio.jp",
 ];
 export const siteAdditionalHeaders = {
     "www.onsen.ag": {
