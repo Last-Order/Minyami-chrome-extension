@@ -80,8 +80,7 @@ class Storage {
     }
     static async addHistory(url, item, dupTester) {
         return await this.setHistory(url, item, (array) => {
-            if (!array.includes(item) &&
-            (typeof dupTester !== "function" || !array.some(dupTester))) {
+            if (!array.includes(item) && (typeof dupTester !== "function" || !array.some(dupTester))) {
                 array.push(item);
                 return true;
             }
@@ -108,7 +107,7 @@ class Storage {
             if (!history) {
                 await Storage.set("history", JSON.stringify({ url: [item] }));
                 return true;
-            }    
+            }
             const parsedHistory = JSON.parse(history);
             if (parsedHistory[url] && Array.isArray(parsedHistory[url])) {
                 if (!historyArrayAction(parsedHistory[url])) {

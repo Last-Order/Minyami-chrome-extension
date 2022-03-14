@@ -12,7 +12,7 @@ Vue.use(VueI18n);
 
 (async () => {
     const i18n = new VueI18n({
-        locale: await Storage.getConfig("language") || "zh_CN",
+        locale: (await Storage.getConfig("language")) || "zh_CN",
         messages: {
             en,
             zh_CN
