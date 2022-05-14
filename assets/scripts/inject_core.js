@@ -16,7 +16,7 @@
     );
     window.addEventListener("unload", notify({ type: "page_url", url: window.location.href }), false);
     const escapeFilename = (filename) => {
-        return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "");
+        return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "_");
     };
     let key = "";
     if (window.fetch) {
