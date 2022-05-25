@@ -38,6 +38,7 @@ let currentExtTab;
 // 处理注入页面消息
 const handleContentScriptMessage = async (message, sender) => {
     if (!sender.tab) return;
+    console.log(message);
     if (message.type === "query_livedata") {
         // /* 移动端浏览器弹窗标签页
         currentExtTab = sender.tab.id;

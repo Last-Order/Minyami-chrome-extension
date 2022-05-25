@@ -75,12 +75,12 @@
     }
     XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
     Object.defineProperty(XMLHttpRequest.prototype, "open", {
-        get: function () {
+        get: function() {
             return this._open;
         },
-        set: function (f) {
+        set: function(f) {
             this._open = new Proxy(f, {
-                apply: function (f, instance, fargs) {
+                apply: function(f, instance, fargs) {
                     listen.call(instance, ...fargs);
                     return f.call(instance, ...fargs);
                 }
@@ -88,8 +88,8 @@
         }
     });
     XMLHttpRequest.prototype.open = XMLHttpRequest.prototype.open;
-    const listen = function () {
-        this.addEventListener("load", function () {
+    const listen = function() {
+        this.addEventListener("load", function() {
             if (this.responseURL.match(/\.m3u8(\?|$)/)) {
                 console.log(this.responseURL);
             }
@@ -124,11 +124,13 @@
                 }
                 // Execute after m3u8 loads
                 switch (location.host) {
-                    case "live2.nicovideo.jp": case "live.nicovideo.jp": {
-                        nico();
+                    case "live2.nicovideo.jp":
+                    case "live.nicovideo.jp": {
+                        nico(this);
                         break;
                     }
-                    case "www.dmm.com": case "www.dmm.co.jp": {
+                    case "www.dmm.com":
+                    case "www.dmm.co.jp": {
                         dmm(this);
                         break;
                     }
@@ -140,7 +142,8 @@
             }
             // Execute when first AJAX request finished
             switch (location.host) {
-                case "www.dmm.com": case "www.dmm.co.jp": {
+                case "www.dmm.com":
+                case "www.dmm.co.jp": {
                     dmm(this);
                     break;
                 }
@@ -160,7 +163,8 @@
                     showroom(this);
                     break;
                 }
-                case "nicochannel.jp": case "pizzaradio.jp": {
+                case "nicochannel.jp":
+                case "pizzaradio.jp": {
                     matchurl(this, "https://hls-auth.cloud.stream.co.jp/key");
                     break;
                 }
@@ -213,7 +217,7 @@
         }
     };
 
-    const nico = () => {
+    const nico = (xhr) => {
         try {
             const liveData = JSON.parse(document.querySelector("#embedded-data").getAttribute("data-props"));
             const websocketUrl = liveData.site.relive.webSocketUrl;
@@ -225,7 +229,7 @@
             }
             notify({
                 type: "key",
-                key: key
+                key: key,
             });
         } catch {}
     };
@@ -261,7 +265,8 @@
             });
             notify({
                 type: "key",
-                key: key
+                key: key,
+                url: xhr.responseURL
             });
         }
     };
