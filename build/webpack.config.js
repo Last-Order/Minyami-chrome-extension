@@ -5,6 +5,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 const generateHTMLPluginConf = (input) => {
     const result = [];
@@ -75,7 +76,7 @@ const generateConfig = (input) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [MiniCssExtractPlugin.loader, "css-loader"]
+                    use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"]
                 },
                 {
                     test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
@@ -96,7 +97,12 @@ const generateConfig = (input) => {
                         chunks: "all"
                     }
                 }
-            }
+            },
+            minimizer: [
+                // For webpack@5 you can use the `...` syntax to extend existing minimizers (i.e. `terser-webpack-plugin`), uncomment the next line
+                `...`,
+                new CssMinimizerPlugin()
+            ]
         }
     };
 };
