@@ -2,9 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const WriteFilePlugin = require("write-file-webpack-plugin");
+const { VueLoaderPlugin } = require("vue-loader");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const generateHTMLPluginConf = (input) => {
     const result = [];
@@ -37,7 +37,6 @@ const generateConfig = (input) => {
             extensions: [".js", ".vue"]
         },
         plugins: [
-            new WriteFilePlugin(),
             new CleanWebpackPlugin({
                 verbose: true
             }),
@@ -49,7 +48,8 @@ const generateConfig = (input) => {
                     }
                 ]
             }),
-            new ExtractTextPlugin("[name].css"),
+            new VueLoaderPlugin(),
+            new MiniCssExtractPlugin(),
             ...generateHTMLPluginConf(input),
             {
                 apply: (compiler) => {
@@ -75,11 +75,11 @@ const generateConfig = (input) => {
                 },
                 {
                     test: /\.css$/,
-                    loader: "style-loader!css-loader"
+                    use: [MiniCssExtractPlugin.loader, "css-loader"]
                 },
                 {
                     test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-                    loader: "url-loader"
+                    type: "asset/resource"
                 }
             ]
         },
@@ -95,8 +95,7 @@ const generateConfig = (input) => {
                         name: "vendors",
                         chunks: "all"
                     }
-                },
-                name: true
+                }
             }
         }
     };
