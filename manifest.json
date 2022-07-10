@@ -1,6 +1,6 @@
 {
     "name": "Minyami",
-    "version": "1.4.6",
+    "version": "1.4.7",
     "author": "Eridanus Sora",
     "manifest_version": 3,
     "description": "Minyami Chrome Extension",
@@ -14,7 +14,7 @@
     "icons": {
         "128": "assets/logo.png"
     },
-    "permissions": ["tabs", "scripting", "storage", "webRequest"],
+    "permissions": ["tabs", "scripting", "storage"],
     "host_permissions": [
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
