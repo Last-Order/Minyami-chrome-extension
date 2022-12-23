@@ -41,6 +41,8 @@
         "https://mixbox.live/campaign_live/*",
         "https://playervspf.channel.or.jp/*",
         "https://nicochannel.jp/*",
+        "https://canan8181.com/*",
+        "https://rnqq.jp/*",
         "https://pizzaradio.jp/*"
     ],
     "content_scripts": [
@@ -71,6 +73,8 @@
                 "https://mixbox.live/campaign_live/*",
                 "https://playervspf.channel.or.jp/*",
                 "https://nicochannel.jp/*",
+                "https://canan8181.com/*",
+                "https://rnqq.jp/*",
                 "https://pizzaradio.jp/*"
             ],
             "run_at": "document_end",
@@ -110,6 +114,8 @@
             "https://mixbox.live/campaign_live/*",
             "https://playervspf.channel.or.jp/*",
             "https://nicochannel.jp/*",
+            "https://canan8181.com/*",
+            "https://rnqq.jp/*",
             "https://pizzaradio.jp/*"
         ]
     },

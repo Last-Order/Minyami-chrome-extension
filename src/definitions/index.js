@@ -20,7 +20,9 @@ export const supportedSites = [
     "live.bilibili.com",
     "playervspf.channel.or.jp",
     "nicochannel.jp",
-    "pizzaradio.jp"
+    "pizzaradio.jp",
+    "canan8181.com",
+    "rnqq.jp"
 ];
 export const needCookiesSites = ["360ch.tv"];
 export const needKeySites = [
@@ -33,6 +35,8 @@ export const needKeySites = [
     "www.onsen.ag",
     "nicochannel.jp",
     "pizzaradio.jp",
+    "canan8181.com",
+    "rnqq.jp"
 ];
 export const siteAdditionalHeaders = {
     "www.onsen.ag": {
