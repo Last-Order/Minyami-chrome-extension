@@ -35,6 +35,9 @@ export const needKeySites = [
     "pizzaradio.jp",
 ];
 export const siteAdditionalHeaders = {
+    "www.openrec.tv": {
+        Referer: "https://www.openrec.tv/"
+    },
     "www.onsen.ag": {
         Referer: "https://www.onsen.ag/"
     },
