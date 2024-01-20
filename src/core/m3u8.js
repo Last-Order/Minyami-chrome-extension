@@ -15,6 +15,7 @@ export class Playlist {
         lines.forEach((line, index) => {
             if (line.startsWith("#EXT-X-STREAM-INF")) {
                 const chunkList = {
+                    fileExt: "ts",
                     type: "video"
                 };
                 if (line.match(/BANDWIDTH=(\d+)/) !== null) {

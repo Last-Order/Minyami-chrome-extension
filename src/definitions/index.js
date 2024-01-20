@@ -31,7 +31,6 @@ export const supportedSites = [
 ];
 export const needCookiesSites = [
     new NeedCookiesSite("(www).360ch.tv"),
-    new NeedCookiesSite("spwn.jp"),
     new NeedCookiesSite("(www).nicovideo.jp")
 ];
 export const needKeySites = [

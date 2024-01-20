@@ -31,6 +31,7 @@
         "https://www.onsen.ag/*",
         "https://www.youtube.com/*",
         "https://nogidoga.com/episode/*",
+        "https://spwn.jp/*",
         "https://stagecrowd.live/*",
         "https://live.bilibili.com/*",
         "https://mixbox.live/campaign_live/*",
@@ -38,9 +39,8 @@
         "https://nicochannel.jp/*",
         "https://pizzaradio.jp/*",
         "https://gs-ch.com/*",
-        "*://*.360ch.tv/*",
-        "*://*.nicovideo.jp/*",
-        "*://spwn.jp/*"
+        "https://*.360ch.tv/*",
+        "https://*.nicovideo.jp/*"
     ],
     "content_scripts": [
         {

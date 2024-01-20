@@ -14,16 +14,6 @@
         },
         false
     );
-    let cookies = {};
-    window.addEventListener(
-        "MinyamiPageCookies",
-        (event) => {
-            for (const { name, value } of event.detail) {
-                cookies[name] = `${name}=${value};`;
-            }
-        },
-        false
-    );
     window.addEventListener("unload", notify({ type: "page_url", url: window.location.href }), false);
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "_");
@@ -154,11 +144,11 @@
                         break;
                     }
                     case "www.nicovideo.jp": {
-                        const { domand_bid } = cookies;
-                        if (!domand_bid) break;
+                        const cookies = document.cookie.match(/(domand_bid\=.+?)(;|$)/)[1];
+                        if (!cookies) break;
                         notify({
                             type: "cookies",
-                            cookies: domand_bid
+                            cookies
                         });
                         break;
                     }
@@ -277,10 +267,10 @@
         notify({
             type: "cookies",
             cookies: [
-                cookies["CloudFront-Policy"],
-                cookies["CloudFront-Signature"],
-                cookies["CloudFront-Key-Pair-Id"]
-            ].join(" ")
+                document.cookie.match(/(CloudFront-Policy\=.+?)(;|$)/)[1],
+                document.cookie.match(/(CloudFront-Signature\=.+?)(;|$)/)[1],
+                document.cookie.match(/(CloudFront-Key-Pair-Id\=.+?)(;|$)/)[1],
+            ].join("; ")
         });
     };
 
@@ -295,7 +285,7 @@
                 .join("");
             notify({
                 type: "cookies",
-                cookies: "licenseUID=" + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
+                cookies: document.cookie.match(/(licenseUID\=.+?)(;|$)/)[1]
             });
             notify({
                 type: "key",
@@ -308,7 +298,7 @@
     const ch360 = (xhr) => {
         notify({
             type: "cookies",
-            cookies: "ch360pt=" + document.cookie.match(/ch360pt\=(.+?)(;|$)/)[1]
+            cookies: document.cookie.match(/(ch360pt\=.+?)(;|$)/)[1]
         });
     };
 
@@ -352,7 +342,7 @@
         }
         notify({
             type: "cookies",
-            cookies: "PREF=" + document.cookie.match(/PREF\=(.+?)(;|$)/)[1]
+            cookies: document.cookie.match(/(PREF\=.+?)(;|$)/)[1]
         });
     };
 

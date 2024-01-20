@@ -33,8 +33,10 @@ const getCachedTabUrl = async (tabId) => {
         tabToUrl[tabId] = url;
         for (const site of needCookiesSites) {
             if (url.includes(site.domain)) {
-                evalOnTab(tabId, (detail) => {
-                    window.dispatchEvent(new CustomEvent("MinyamiPageCookies", { detail }));
+                evalOnTab(tabId, (cookies) => {
+                    for (const { name, value } of cookies) {
+                        document.cookie = `${name}=${value}`;
+                    }
                 }, await chrome.cookies.getAll({ domain: site.cookieDomain }));
                 break;
             }
@@ -77,7 +79,6 @@ const handleContentScriptMessage = async (message, sender) => {
         });
         if (url.includes("abema.tv")) {
             for (const chunklist of playlist.chunkLists) {
-                chunklist.fileExt = "ts";
                 chunklist.keyUrl = "abematv-license:";
             }
         }
