@@ -14,9 +14,29 @@
         },
         false
     );
+    let cookies = {};
+    window.addEventListener(
+        "MinyamiPageCookies",
+        (event) => {
+            for (const { name, value } of event.detail) {
+                cookies[name] = `${name}=${value};`;
+            }
+        },
+        false
+    );
     window.addEventListener("unload", notify({ type: "page_url", url: window.location.href }), false);
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "_");
+    };
+    const getFileExt = (m3u8Content) => {
+        switch (m3u8Content.match(/#EXT-X-MAP:URI=".*\.(\w+)(\?|")/m)?.[1]) {
+            case "cmfv":
+                return "m4v.ts";
+            case "cmfa":
+                return "m4a.ts";
+            default:
+                return "ts";
+        }
     };
     let key = "";
     if (window.fetch) {
@@ -51,9 +71,10 @@
                                     streamName
                                 });
                             } else {
-                                const keyUrlMatch = responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
+                                const keyUrlMatch = responseText.match(/#EXT-X-KEY:.*URI="(abematv-license:|https:.*).*?"/);
                                 notify({
                                     type: "chunklist",
+                                    fileExt: getFileExt(responseText),
                                     content: responseText,
                                     url: r.url,
                                     title,
@@ -113,9 +134,12 @@
                         title: title || escapeFilename(document.title)
                     });
                 } else {
-                    const keyUrlMatch = this.responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
+                    const keyUrlMatch = ["live.nicovideo.jp", "live2.nicovideo.jp"].includes(location.host) ?
+                        [, `nicolive://${this.responseURL.match(/ht2_nicolive=(\d+)/)[1]}`] :
+                        this.responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
                     notify({
                         type: "chunklist",
+                        fileExt: getFileExt(this.responseText),
                         content: this.responseText,
                         url: this.responseURL,
                         title: title || escapeFilename(document.title),
@@ -127,6 +151,15 @@
                     case "live2.nicovideo.jp":
                     case "live.nicovideo.jp": {
                         nico(this);
+                        break;
+                    }
+                    case "www.nicovideo.jp": {
+                        const { domand_bid } = cookies;
+                        if (!domand_bid) break;
+                        notify({
+                            type: "cookies",
+                            cookies: domand_bid
+                        });
                         break;
                     }
                     case "www.dmm.com":
@@ -149,6 +182,10 @@
                 }
                 case "www.360ch.tv": {
                     ch360(this);
+                    break;
+                }
+                case "www.nicovideo.jp": {
+                    matchurl(this);
                     break;
                 }
                 case "hibiki-radio.jp": {
@@ -195,7 +232,8 @@
                     if (key !== "00000000000000000000000000000000") {
                         notify({
                             type: "key",
-                            key: key
+                            key: key,
+                            url: "abematv-license:"
                         });
                     }
                 }
@@ -204,7 +242,7 @@
         };
     };
 
-    const matchurl = (xhr, keyword) => {
+    const matchurl = (xhr, keyword = ".key") => {
         if (xhr.readyState === 4 && xhr.responseURL.includes(keyword)) {
             const key = Array.from(new Uint8Array(xhr.response))
                 .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
@@ -230,6 +268,7 @@
             notify({
                 type: "key",
                 key: key,
+                url: `nicolive://${key.match(/^\d+_(\d+)/)[1]}`
             });
         } catch {}
     };
@@ -237,16 +276,11 @@
     const spwn = () => {
         notify({
             type: "cookies",
-            cookies:
-                "CloudFront-Policy=" +
-                document.cookie.match(/CloudFront-Policy\=(.+?)(;|$)/)[1] +
-                "; " +
-                "CloudFront-Signature=" +
-                document.cookie.match(/CloudFront-Signature\=(.+?)(;|$)/)[1] +
-                "; " +
-                "CloudFront-Key-Pair-Id=" +
-                document.cookie.match(/CloudFront-Key-Pair-Id\=(.+?)(;|$)/)[1] +
-                "; "
+            cookies: [
+                cookies["CloudFront-Policy"],
+                cookies["CloudFront-Signature"],
+                cookies["CloudFront-Key-Pair-Id"]
+            ].join(" ")
         });
     };
 
@@ -297,6 +331,7 @@
                     chunkLists: [
                         {
                             type: "video",
+                            fileExt: "ts",
                             resolution: {
                                 x: "Unknown",
                                 y: "Unknown"
@@ -335,6 +370,7 @@
                         .map((i) => {
                             return {
                                 type: "video",
+                                fileExt: "ts",
                                 bandwidth: i.quality * 1024,
                                 resolution: {
                                     x: "Unknown",

@@ -6,33 +6,42 @@ import en from "../../messages/en";
 
 const tabToUrl = {};
 
-const getCachedTabUrl = (tabId) =>
+const evalOnTab = (tabId, func, ...args) =>
     new Promise((resolve) => {
         if (typeof tabId !== "number") return resolve();
-        chrome.scripting.executeScript(
-            {
-                target: { tabId },
-                func: () => {
-                    let url;
-                    window.addEventListener(
-                        "MinyamiPageUrl",
-                        (value) => {
-                            url = value.detail;
-                        },
-                        { capture: false, once: true }
-                    );
-                    window.dispatchEvent(new CustomEvent("MinyamiGetPageUrl"));
-                    return url;
-                }
-            },
-            (results) => {
-                if (results[0].result) {
-                    tabToUrl[tabId] = results[0].result;
-                }
-                resolve(tabToUrl[tabId]);
-            }
-        );
+        chrome.scripting.executeScript({
+            target: { tabId },
+            func,
+            args
+        }, resolve);
     });
+
+const getCachedTabUrl = async (tabId) => {
+    const url = (await evalOnTab(tabId, () => {
+        let url;
+        window.addEventListener(
+            "MinyamiPageUrl",
+            (event) => {
+                url = event.detail;
+            },
+            { capture: false, once: true }
+        );
+        window.dispatchEvent(new CustomEvent("MinyamiGetPageUrl"));
+        return url;
+    }))[0].result;
+    if (url) {
+        tabToUrl[tabId] = url;
+        for (const site of needCookiesSites) {
+            if (url.includes(site.domain)) {
+                evalOnTab(tabId, (detail) => {
+                    window.dispatchEvent(new CustomEvent("MinyamiPageCookies", { detail }));
+                }, await chrome.cookies.getAll({ domain: site.cookieDomain }));
+                break;
+            }
+        }
+    }
+    return tabToUrl[tabId];
+};
 
 let currentExtTab;
 // 处理注入页面消息
@@ -59,7 +68,6 @@ const handleContentScriptMessage = async (message, sender) => {
         return;
     }
     const url = await getCachedTabUrl(tabId); // 必然回复可用值
-    // console.log(message);
     if (message.type === "playlist") {
         const playlist = new Playlist({
             content: message.content,
@@ -67,35 +75,26 @@ const handleContentScriptMessage = async (message, sender) => {
             title: message.title,
             streamName: message.streamName
         });
+        if (url.includes("abema.tv")) {
+            for (const chunklist of playlist.chunkLists) {
+                chunklist.fileExt = "ts";
+                chunklist.keyUrl = "abematv-license:";
+            }
+        }
         await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
-    if (message.type === "chunklist") {
-        // 判断是否需要截获 key 而不是直接交由本体下载
-        if (message.keyUrl && needKeySites.some((site) => url.includes(site))) {
-            const keyIndexMap = {};
-            for (const playlist of await Storage.getHistory(url)) {
-                let modded = false;
-                for (const chunklist of playlist.chunkLists) {
-                    if (chunklist.keyIndex !== undefined) {
-                        keyIndexMap[chunklist.keyUrl] = chunklist.keyIndex;
-                        continue;
-                    }
-                    if (chunklist.url === message.url) {
-                        modded = true;
-                        chunklist.keyUrl = message.keyUrl;
-                        if (chunklist.keyUrl in keyIndexMap) {
-                            chunklist.keyIndex = keyIndexMap[chunklist.keyUrl];
-                        }
-                    }
-                }
-                if (!modded) {
-                    continue;
-                }
+    updateChunklist: if (message.type === "chunklist") {
+        for (const playlist of await Storage.getHistory(url)) {
+            const chunklist = playlist.chunkLists.find((c) => c.url.includes(message.url.split(/\?|$/)[0]));
+            if (!chunklist) continue;
+            if (chunklist.keyUrl !== message.keyUrl || chunklist.fileExt !== message.fileExt) {
+                chunklist.keyUrl = message.keyUrl;
+                chunklist.fileExt = message.fileExt;
                 await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
             }
-            await doUpdateTabStatus(tabId);
+            break updateChunklist;
         }
-        return;
+        return; // 循环结束时没有变动，则跳过消息传递
     }
     if (message.type === "playlist_chunklist") {
         const playlist = new Playlist({
@@ -108,18 +107,9 @@ const handleContentScriptMessage = async (message, sender) => {
         await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
     if (message.type === "key") {
-        const nextIndex = (await Storage.getHistory(url + "-key")).length;
-        await Storage.addHistory(url + "-key", message.key);
-        if (nextIndex === (await Storage.getHistory(url + "-key")).length) return;
-        for (const playlist of await Storage.getHistory(url)) {
-            for (const chunklist of playlist.chunkLists) {
-                if (chunklist.keyIndex !== undefined || (chunklist.keyUrl && chunklist.keyUrl !== message.url)) {
-                    continue;
-                }
-                chunklist.keyIndex = nextIndex;
-            }
-            await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
-        }
+        const { key, url: keyUrl } = message;
+        const added = await Storage.addHistory(url + "-key", [keyUrl, key], (k) => k[0] === keyUrl);
+        if (!added) return;
     }
     if (message.type === "cookies") {
         await Storage.addHistory(url + "-cookies", message.cookies);
@@ -274,7 +264,7 @@ const updateTabStatus = async (tabId, checkStatusNow) => {
 // 被调用时已经确定是支持的网站
 const doUpdateTabStatus = async (tabId) => {
     if ((await getTabPlaylists(tabId)).length > 0) {
-        if ((await getTabStatusFlags(tabId)) === statusFlags.supported) {
+        if ((await getTabStatusFlags(tabId)) === statusFlags.allReady) {
             await setTabStatus(tabId, "ready");
         } else {
             await setTabStatus(tabId, "waiting");
@@ -286,8 +276,9 @@ const doUpdateTabStatus = async (tabId) => {
 
 const setTabStatus = async (tabId, status) => {
     const playlists = await getTabPlaylists(tabId);
+    const keys = await getTabKeys(tabId);
     const total = playlists.length;
-    const done = playlists.filter((p) => p.chunkLists.some((c) => "keyIndex" in c)).length;
+    const done = playlists.filter((p) => p.chunkLists.some((c) => "keyUrl" in c && c.keyIndex in keys)).length;
     const streamCount = (done && done !== total ? `${done}/` : "") + `${total}`;
     const [color, text] = {
         initial: ["#1966b3", "?"],
@@ -304,7 +295,7 @@ const setTabStatus = async (tabId, status) => {
 const getTabPlaylists = async (tabId) => (!(tabId in tabToUrl) && []) || (await Storage.getHistory(tabToUrl[tabId]));
 
 const getTabKeys = async (tabId) =>
-    (!(tabId in tabToUrl) && []) || (await Storage.getHistory(tabToUrl[tabId] + "-key"));
+    (!(tabId in tabToUrl) && {}) || Object.fromEntries(await Storage.getHistory(tabToUrl[tabId] + "-key"));
 
 const getTabCookies = async (tabId) =>
     (!(tabId in tabToUrl) && []) || (await Storage.getHistory(tabToUrl[tabId] + "-cookies"));
@@ -316,13 +307,13 @@ const getTabStatusFlags = async (tabId) => {
     }
     let flags = statusFlags.supported;
     for (const site of needKeySites) {
-        if (url.includes(site) && !(await getTabKeys(tabId)).length) {
+        if (url.includes(site) && !Object.keys(await getTabKeys(tabId)).length) {
             flags |= statusFlags.missingKey;
             break;
         }
     }
     for (const site of needCookiesSites) {
-        if (url.includes(site) && !(await getTabCookies(tabId)).length) {
+        if (url.includes(site.domain) && !(await getTabCookies(tabId)).length) {
             flags |= statusFlags.missingCookie;
             break;
         }
