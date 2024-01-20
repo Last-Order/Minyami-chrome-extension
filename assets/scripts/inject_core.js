@@ -164,6 +164,7 @@
                     break;
                 }
                 case "nicochannel.jp":
+                case "gs-ch.com":
                 case "pizzaradio.jp": {
                     matchurl(this, "https://hls-auth.cloud.stream.co.jp/key");
                     break;
