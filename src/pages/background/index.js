@@ -1,4 +1,4 @@
-import { Playlist } from "../../core/m3u8.js";
+import { Chunklist, Playlist } from "../../core/m3u8.js";
 import Storage from "../../core/utils/storage.js";
 import { needCookiesSites, needKeySites, supportedSites, statusFlags } from "../../definitions";
 import zh_CN from "../../messages/zh-cn";
@@ -77,25 +77,20 @@ const handleContentScriptMessage = async (message, sender) => {
             title: message.title,
             streamName: message.streamName
         });
-        if (url.includes("abema.tv")) {
-            for (const chunklist of playlist.chunkLists) {
-                chunklist.keyUrl = "abematv-license:";
-            }
-        }
         await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
-    updateChunklist: if (message.type === "chunklist") {
-        for (const playlist of await Storage.getHistory(url)) {
+    if (message.type === "chunklist") {
+        const playlists = await Storage.getHistory(url);
+        while (playlists.length > 0) {
+            const playlist = playlists.pop();
             const chunklist = playlist.chunkLists.find((c) => c.url.includes(message.url.split(/\?|$/)[0]));
-            if (!chunklist) continue;
-            if (chunklist.keyUrl !== message.keyUrl || chunklist.fileExt !== message.fileExt) {
-                chunklist.keyUrl = message.keyUrl;
-                chunklist.fileExt = message.fileExt;
-                await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
-            }
-            break updateChunklist;
+            if (!chunklist || chunklist.parsed) continue; // 已传递过内容，跳过修改
+            Object.setPrototypeOf(chunklist, Chunklist.prototype);
+            chunklist.content = message.content;
+            await Storage.modHistory(url, playlist, (p) => p.url === playlist.url);
+            break;
         }
-        return; // 循环结束时没有变动，则跳过消息传递
+        if (!playlists.length) return; // 循环结束时未有任何修改操作，则跳过消息传递
     }
     if (message.type === "playlist_chunklist") {
         const playlist = new Playlist({

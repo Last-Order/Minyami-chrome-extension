@@ -68,7 +68,7 @@ export const minyamiVersionRequirementMap = {
     "nicochannel.jp": "4.4.13",
     "pizzaradio.jp": "4.4.13",
     "gs-ch.com": "4.4.13",
-    "www.nicovideo.jp": "5.2.1",
+    "www.nicovideo.jp": "5.3.0",
 };
 export const statusFlags = {
     supported: 0b1,

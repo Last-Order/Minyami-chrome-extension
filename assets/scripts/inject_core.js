@@ -18,16 +18,6 @@
     const escapeFilename = (filename) => {
         return filename.replace(/[\/\*\\\:|\?<>"!]/gi, "_");
     };
-    const getFileExt = (m3u8Content) => {
-        switch (m3u8Content.match(/#EXT-X-MAP:URI=".*\.(\w+)(\?|")/m)?.[1]) {
-            case "cmfv":
-                return "m4v.ts";
-            case "cmfa":
-                return "m4a.ts";
-            default:
-                return "ts";
-        }
-    };
     let key = "";
     if (window.fetch) {
         const _fetch = fetch;
@@ -61,14 +51,11 @@
                                     streamName
                                 });
                             } else {
-                                const keyUrlMatch = responseText.match(/#EXT-X-KEY:.*URI="(abematv-license:|https:.*).*?"/);
                                 notify({
                                     type: "chunklist",
-                                    fileExt: getFileExt(responseText),
                                     content: responseText,
                                     url: r.url,
-                                    title,
-                                    ...(keyUrlMatch && { keyUrl: keyUrlMatch[1] })
+                                    title
                                 });
                             }
                             switch (location.host) {
@@ -124,16 +111,11 @@
                         title: title || escapeFilename(document.title)
                     });
                 } else {
-                    const keyUrlMatch = ["live.nicovideo.jp", "live2.nicovideo.jp"].includes(location.host) ?
-                        [, `nicolive://${this.responseURL.match(/ht2_nicolive=(\d+)/)[1]}`] :
-                        this.responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
                     notify({
                         type: "chunklist",
-                        fileExt: getFileExt(this.responseText),
                         content: this.responseText,
                         url: this.responseURL,
-                        title: title || escapeFilename(document.title),
-                        ...(keyUrlMatch && { keyUrl: keyUrlMatch[1] })
+                        title: title || escapeFilename(document.title)
                     });
                 }
                 // Execute after m3u8 loads
@@ -258,7 +240,7 @@
             notify({
                 type: "key",
                 key: key,
-                url: `nicolive://${key.match(/^\d+_(\d+)/)[1]}`
+                url: `nicolive://${key.match(/^(\d+)_/)[1]}`
             });
         } catch {}
     };
