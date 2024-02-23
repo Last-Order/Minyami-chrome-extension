@@ -37,7 +37,6 @@ export const needKeySites = [
     "abema.tv",
     "live2.nicovideo.jp",
     "live.nicovideo.jp",
-    "www.nicovideo.jp",
     "dmm.com",
     "dmm.co.jp",
     "hibiki-radio.jp",

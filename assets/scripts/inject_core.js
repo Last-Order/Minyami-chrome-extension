@@ -156,10 +156,6 @@
                     ch360(this);
                     break;
                 }
-                case "www.nicovideo.jp": {
-                    matchurl(this);
-                    break;
-                }
                 case "hibiki-radio.jp": {
                     matchurl(this, "datakey");
                     break;
