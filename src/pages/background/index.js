@@ -77,12 +77,14 @@ const handleContentScriptMessage = async (message, sender) => {
             title: message.title,
             streamName: message.streamName
         });
+        if (!needKeySites.some(site => url.includes(site))) {
+            playlist.chunkLists.forEach(chunklist => chunklist.keyUrl = null); // 站点不需要 key，以 null 占位
+        }
         await Storage.addHistory(url, playlist, (p) => p.url === playlist.url);
     }
     if (message.type === "chunklist") {
         const playlists = await Storage.getHistory(url);
-        while (playlists.length > 0) {
-            const playlist = playlists.pop();
+        for (let playlist = playlists[0]; playlists.length > 0; playlist = playlists.splice(0, 1)[0]) {
             const chunklist = playlist.chunkLists.find((c) => c.url.includes(message.url.split(/\?|$/)[0]));
             if (!chunklist || chunklist.parsed) continue; // 已传递过内容，跳过修改
             Object.setPrototypeOf(chunklist, Chunklist.prototype);
@@ -274,7 +276,7 @@ const setTabStatus = async (tabId, status) => {
     const playlists = await getTabPlaylists(tabId);
     const keys = await getTabKeys(tabId);
     const total = playlists.length;
-    const done = playlists.filter((p) => p.chunkLists.some((c) => "keyUrl" in c && c.keyIndex in keys)).length;
+    const done = playlists.filter((p) => p.chunkLists.some((c) => c.keyUrl && c.keyUrl in keys)).length;
     const streamCount = (done && done !== total ? `${done}/` : "") + `${total}`;
     const [color, text] = {
         initial: ["#1966b3", "?"],

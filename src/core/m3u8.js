@@ -1,4 +1,8 @@
 import CommonUtils from "./utils/common";
+const FILE_EXTS = {
+    cmfv: "m4v.ts",
+    cmfa: "m4a.ts",
+};
 export class Chunklist {
     constructor(type) {
         this.type = type;
@@ -6,13 +10,11 @@ export class Chunklist {
         this.parsed = false;
     }
     set content(value) {
-        switch (value.match(/#EXT-X-MAP:URI=".*\.(\w+)(\?|")/m)?.[1]) {
-            case "cmfv":
-                this.fileExt = "m4v.ts";
-            case "cmfa":
-                this.fileExt = "m4a.ts";
-        };
-        if (this.keyUrl) return this.parsed = true;
+        const extMatch = value.match(/#EXT-X-MAP:URI=".*\.(\w+)(\?|")/m);
+        if (extMatch && extMatch[1] in FILE_EXTS) {
+            this.fileExt = FILE_EXTS[extMatch[1]];
+        }
+        if ("keyUrl" in this) return this.parsed = true;
         const keyUrlMatch = value.match(/#EXT-X-KEY:.*URI="(abematv-license:|https:.*).*?"/);
         if (keyUrlMatch) {
             this.keyUrl = keyUrlMatch[1];
@@ -20,7 +22,6 @@ export class Chunklist {
         this.parsed = true;
     }
 }
-
 export class Playlist {
     constructor({ content, url, title = "", streamName, disableAutoParse = false }) {
         this.content = content;

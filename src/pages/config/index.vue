@@ -254,7 +254,7 @@ export default {
             return command;
         },
         noKey(chunkList) {
-            return this.status.missingKey || ("keyUrl" in chunkList && !(chunkList.keyUrl in this.keys));
+            return this.status.missingKey || (chunkList.keyUrl && !(chunkList.keyUrl in this.keys));
         },
         copy(chunkList) {
             const input = this.$refs[chunkList.url];
