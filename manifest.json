@@ -14,19 +14,16 @@
     "icons": {
         "128": "assets/logo.png"
     },
-    "permissions": ["tabs", "scripting", "storage"],
+    "permissions": ["cookies", "tabs", "scripting", "storage"],
     "host_permissions": [
         "https://www.openrec.tv/*",
         "https://abema.tv/channels/*/slots/*",
         "https://abema.tv/video/*",
         "https://abema.tv/payperview/*",
-        "https://live2.nicovideo.jp/watch/*",
-        "https://live.nicovideo.jp/watch/*",
         "https://www.dmm.com/digital/-/player/*",
         "https://www.dmm.com/monthly/-/player/*",
         "https://www.dmm.co.jp/digital/-/player/*",
         "https://www.dmm.co.jp/monthly/-/player/*",
-        "https://www.360ch.tv/video/view/*",
         "https://www.sonymusic.co.jp/*",
         "https://twitcasting.tv/*",
         "https://www.showroom-live.com/*",
@@ -41,7 +38,9 @@
         "https://playervspf.channel.or.jp/*",
         "https://nicochannel.jp/*",
         "https://pizzaradio.jp/*",
-        "https://gs-ch.com/*"
+        "https://gs-ch.com/*",
+        "https://*.360ch.tv/*",
+        "https://*.nicovideo.jp/*"
     ],
     "content_scripts": [
         {
@@ -57,6 +56,7 @@
                 "https://www.dmm.co.jp/digital/-/player/*",
                 "https://www.dmm.co.jp/monthly/-/player/*",
                 "https://www.360ch.tv/video/view/*",
+                "https://www.nicovideo.jp/watch/*",
                 "https://www.sonymusic.co.jp/*",
                 "https://twitcasting.tv/*",
                 "https://www.showroom-live.com/*",
@@ -95,6 +95,7 @@
             "https://www.dmm.com/monthly/-/player/*",
             "https://www.dmm.co.jp/digital/-/player/*",
             "https://www.dmm.co.jp/monthly/-/player/*",
+            "https://www.nicovideo.jp/watch/*",
             "https://www.360ch.tv/video/view/*",
             "https://www.sonymusic.co.jp/*",
             "https://twitcasting.tv/*",
