@@ -51,13 +51,11 @@
                                     streamName
                                 });
                             } else {
-                                const keyUrlMatch = responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
                                 notify({
                                     type: "chunklist",
                                     content: responseText,
                                     url: r.url,
-                                    title,
-                                    ...(keyUrlMatch && { keyUrl: keyUrlMatch[1] })
+                                    title
                                 });
                             }
                             switch (location.host) {
@@ -113,13 +111,11 @@
                         title: title || escapeFilename(document.title)
                     });
                 } else {
-                    const keyUrlMatch = this.responseText.match(/#EXT-X-KEY:.*URI="(.*)"/);
                     notify({
                         type: "chunklist",
                         content: this.responseText,
                         url: this.responseURL,
-                        title: title || escapeFilename(document.title),
-                        ...(keyUrlMatch && { keyUrl: keyUrlMatch[1] })
+                        title: title || escapeFilename(document.title)
                     });
                 }
                 // Execute after m3u8 loads
@@ -127,6 +123,15 @@
                     case "live2.nicovideo.jp":
                     case "live.nicovideo.jp": {
                         nico(this);
+                        break;
+                    }
+                    case "www.nicovideo.jp": {
+                        const cookies = document.cookie.match(/(domand_bid\=.+?)(;|$)/)[1];
+                        if (!cookies) break;
+                        notify({
+                            type: "cookies",
+                            cookies
+                        });
                         break;
                     }
                     case "www.dmm.com":
@@ -196,7 +201,8 @@
                     if (key !== "00000000000000000000000000000000") {
                         notify({
                             type: "key",
-                            key: key
+                            key: key,
+                            url: "abematv-license:"
                         });
                     }
                 }
@@ -205,7 +211,7 @@
         };
     };
 
-    const matchurl = (xhr, keyword) => {
+    const matchurl = (xhr, keyword = ".key") => {
         if (xhr.readyState === 4 && xhr.responseURL.includes(keyword)) {
             const key = Array.from(new Uint8Array(xhr.response))
                 .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
@@ -231,6 +237,7 @@
             notify({
                 type: "key",
                 key: key,
+                url: `nicolive://${key.match(/^(\d+)_/)[1]}`
             });
         } catch {}
     };
@@ -238,16 +245,11 @@
     const spwn = () => {
         notify({
             type: "cookies",
-            cookies:
-                "CloudFront-Policy=" +
-                document.cookie.match(/CloudFront-Policy\=(.+?)(;|$)/)[1] +
-                "; " +
-                "CloudFront-Signature=" +
-                document.cookie.match(/CloudFront-Signature\=(.+?)(;|$)/)[1] +
-                "; " +
-                "CloudFront-Key-Pair-Id=" +
-                document.cookie.match(/CloudFront-Key-Pair-Id\=(.+?)(;|$)/)[1] +
-                "; "
+            cookies: [
+                document.cookie.match(/(CloudFront-Policy\=.+?)(;|$)/)[1],
+                document.cookie.match(/(CloudFront-Signature\=.+?)(;|$)/)[1],
+                document.cookie.match(/(CloudFront-Key-Pair-Id\=.+?)(;|$)/)[1],
+            ].join("; ")
         });
     };
 
@@ -262,7 +264,7 @@
                 .join("");
             notify({
                 type: "cookies",
-                cookies: "licenseUID=" + document.cookie.match(/licenseUID\=(.+?)(;|$)/)[1]
+                cookies: document.cookie.match(/(licenseUID\=.+?)(;|$)/)[1]
             });
             notify({
                 type: "key",
@@ -275,7 +277,7 @@
     const ch360 = (xhr) => {
         notify({
             type: "cookies",
-            cookies: "ch360pt=" + document.cookie.match(/ch360pt\=(.+?)(;|$)/)[1]
+            cookies: document.cookie.match(/(ch360pt\=.+?)(;|$)/)[1]
         });
     };
 
@@ -298,6 +300,7 @@
                     chunkLists: [
                         {
                             type: "video",
+                            fileExt: "ts",
                             resolution: {
                                 x: "Unknown",
                                 y: "Unknown"
@@ -318,7 +321,7 @@
         }
         notify({
             type: "cookies",
-            cookies: "PREF=" + document.cookie.match(/PREF\=(.+?)(;|$)/)[1]
+            cookies: document.cookie.match(/(PREF\=.+?)(;|$)/)[1]
         });
     };
 
@@ -336,6 +339,7 @@
                         .map((i) => {
                             return {
                                 type: "video",
+                                fileExt: "ts",
                                 bandwidth: i.quality * 1024,
                                 resolution: {
                                     x: "Unknown",

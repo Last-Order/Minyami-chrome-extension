@@ -1,9 +1,16 @@
+class NeedCookiesSite {
+    constructor(url) {
+        this.cookieDomain = url.replace(/\(.*\)/, "");
+        this.domain = url.replace(/\(|\)/g, "");
+    }
+}
 export const supportedSites = [
     "www.openrec.tv",
     "abema.tv",
     "live2.nicovideo.jp",
     "live.nicovideo.jp",
     "cas.nicovideo.jp",
+    "www.nicovideo.jp",
     "www.dmm.com",
     "www.dmm.co.jp",
     "www.360ch.tv",
@@ -22,7 +29,10 @@ export const supportedSites = [
     "pizzaradio.jp",
     "gs-ch.com",
 ];
-export const needCookiesSites = ["360ch.tv"];
+export const needCookiesSites = [
+    new NeedCookiesSite("(www).360ch.tv"),
+    new NeedCookiesSite("(www).nicovideo.jp")
+];
 export const needKeySites = [
     "abema.tv",
     "live2.nicovideo.jp",
@@ -57,9 +67,11 @@ export const minyamiVersionRequirementMap = {
     "nicochannel.jp": "4.4.13",
     "pizzaradio.jp": "4.4.13",
     "gs-ch.com": "4.4.13",
+    "www.nicovideo.jp": "5.3.0",
 };
 export const statusFlags = {
     supported: 0b1,
+    allReady: 0b1,
     missingCookie: 0b10,
     missingKey: 0b100,
 };
