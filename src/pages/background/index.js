@@ -198,7 +198,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status !== "loading") {
         return;
     }
-    const url = (tabToUrl[tabId] = tab.url);
+    const url = tab.url;
+    tabToUrl[tabId] = url;
+
     // 刷新时移除原有数据
     await Storage.removeHistory(url);
     await Storage.removeHistory(url + "-key");
@@ -227,6 +229,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
     await updateTabStatus(tabId, false);
 });
+
+chrome.scripting.registerContentScripts([{
+    id: "abema_polyfill",
+    matches: ["https://abema.tv/channels/*/slots/*", "https://abema.tv/video/*", "https://abema.tv/payperview/*"],
+    runAt: "document_start",
+    world: "MAIN",
+    js: ["./assets/scripts/abema_polyfill.js"],
+}]);
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
     if (tabId === currentExtTab) {
