@@ -228,12 +228,12 @@ export default {
             const prefix = this.configForm.useNPX ? "npx minyami" : "minyami";
             let command = "";
             if (!this.form.recoverMode) {
-                command += `${prefix} -d "${chunklist.url}" --output "${playlist.title.replace(/\"/g, `\\"`)}.${chunklist.fileExt}"`;
+                command += `${prefix} -d "${chunklist.url}" --output "${playlist.title.replace(/\"/g, `\\"`)}.ts"`;
             } else {
                 command += `${prefix} -r "${chunklist.url}"`;
             }
-            if ("keyUrl" in chunklist && chunklist.keyUrl in this.keys) {
-                command += ` --key "${this.keys[chunklist.keyUrl]}"`;
+            if ("keyIndex" in chunklist) {
+                command += ` --key "${this.keys[chunklist.keyIndex]}"`;
             }
             if (this.cookies.length > 0) {
                 command += ` --headers "Cookie: ${this.cookies[index] || this.cookies[0]}"`;
@@ -254,7 +254,7 @@ export default {
             return command;
         },
         noKey(chunkList) {
-            return this.status.missingKey || (chunkList.keyUrl && !(chunkList.keyUrl in this.keys));
+            return this.status.missingKey || ("keyUrl" in chunkList && !("keyIndex" in chunkList));
         },
         copy(chunkList) {
             const input = this.$refs[chunkList.url];
