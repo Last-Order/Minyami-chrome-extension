@@ -41,7 +41,8 @@
         "https://playervspf.channel.or.jp/*",
         "https://nicochannel.jp/*",
         "https://pizzaradio.jp/*",
-        "https://gs-ch.com/*"
+        "https://gs-ch.com/*",
+        "https://qlover.jp/*"
     ],
     "content_scripts": [
         {
@@ -71,7 +72,8 @@
                 "https://playervspf.channel.or.jp/*",
                 "https://nicochannel.jp/*",
                 "https://pizzaradio.jp/*",
-                "https://gs-ch.com/*"
+                "https://gs-ch.com/*",
+                "https://qlover.jp/*"
             ],
             "run_at": "document_end",
             "js": ["./assets/scripts/inject.js"]
@@ -110,7 +112,8 @@
             "https://playervspf.channel.or.jp/*",
             "https://nicochannel.jp/*",
             "https://pizzaradio.jp/*",
-            "https://gs-ch.com/*"
+            "https://gs-ch.com/*",
+            "https://qlover.jp/*"
         ]
     },
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApOAvWQj8J9VZITRyM3ZkADne+Mswjchky3CFZon98uxrUwf1yV0RFzm8Y9CkygRHgNlKlLSFQF0pi5Or6YziNJpc1z97VgmI7Wwv89R/D/92JHyw1oq+LWmQAv3NnpJNqUGqMvTWmDamLP6z1kE4ikeGvqBSvlN+vlGSCYM4shS3JyavRL4LM1rBvTyFGFXmotixJ9HVEB6+IZa9tjHWHrz5FD5WAYjCKOuj3Cw6uC0tAOKTTr2vwVVUEHGPJDNd/WXGyyIeZw6kocd459L6MM5VkV/xSvwcwvvftAj/JVH0mo6nRQn2R1L+9l6XMYMZAW2D5USCwcFu542C9B8ATwIDAQAB"

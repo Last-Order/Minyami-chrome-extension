@@ -21,6 +21,7 @@ export const supportedSites = [
     "nicochannel.jp",
     "pizzaradio.jp",
     "gs-ch.com",
+    "qlover.jp",
 ];
 export const needCookiesSites = ["360ch.tv"];
 export const needKeySites = [
@@ -34,6 +35,7 @@ export const needKeySites = [
     "nicochannel.jp",
     "pizzaradio.jp",
     "gs-ch.com",
+    "qlover.jp",
 ];
 export const siteAdditionalHeaders = {
     "www.openrec.tv": {
@@ -57,6 +59,7 @@ export const minyamiVersionRequirementMap = {
     "nicochannel.jp": "4.4.13",
     "pizzaradio.jp": "4.4.13",
     "gs-ch.com": "4.4.13",
+    "qlover.jp": "4.4.13",
 };
 export const statusFlags = {
     supported: 0b1,
