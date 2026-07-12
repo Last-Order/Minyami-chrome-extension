@@ -1,5 +1,4 @@
 export const supportedSites = [
-    "www.openrec.tv",
     "abema.tv",
     "live2.nicovideo.jp",
     "live.nicovideo.jp",
@@ -22,8 +21,19 @@ export const supportedSites = [
     "pizzaradio.jp",
     "gs-ch.com",
     "qlover.jp",
+    "sheeta.jp",
+    "asobichannel.asobistore.jp",
+    "www.zan-live.com",
+    "zaiko.io",
+    "fcchannel.re-tapirs.com",
+    "audee-membership.jp",
+    "tunku.jp",
+    "www.mellow-fan.com",
 ];
-export const needCookiesSites = ["360ch.tv"];
+export const needCookiesSites = [
+    "360ch.tv",
+    "www.zan-live.com",
+];
 export const needKeySites = [
     "abema.tv",
     "live2.nicovideo.jp",
@@ -36,10 +46,14 @@ export const needKeySites = [
     "pizzaradio.jp",
     "gs-ch.com",
     "qlover.jp",
+    "sheeta.jp",
+    "www.zan-live.com",
+    "audee-membership.jp",
+    "tunku.jp"
 ];
 export const siteAdditionalHeaders = {
-    "www.openrec.tv": {
-        Referer: "https://www.openrec.tv/",
+    "www.mellow-fan.com": {
+        Referer: "https://www.mellow-fan.com/",
     },
     "www.onsen.ag": {
         Referer: "https://www.onsen.ag/",
@@ -60,6 +74,9 @@ export const minyamiVersionRequirementMap = {
     "pizzaradio.jp": "4.4.13",
     "gs-ch.com": "4.4.13",
     "qlover.jp": "4.4.13",
+    "sheeta.jp": "4.4.13",
+    "audee-membership.jp": "4.4.13",
+    "tunku.jp": "4.4.13",
 };
 export const statusFlags = {
     supported: 0b1,

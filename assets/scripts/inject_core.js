@@ -163,9 +163,16 @@
                     showroom(this);
                     break;
                 }
+                case "www.zan-live.com": {
+                    zanlive(this,"getKey");
+                    break;
+                }
                 case "nicochannel.jp":
                 case "gs-ch.com":
                 case "qlover.jp":
+                case "audee-membership.jp":
+                case "sheeta.jp": 
+                case "tunku.jp": 
                 case "pizzaradio.jp": {
                     matchurl(this, "https://hls-auth.cloud.stream.co.jp/key");
                     break;
@@ -250,6 +257,24 @@
                 document.cookie.match(/CloudFront-Key-Pair-Id\=(.+?)(;|$)/)[1] +
                 "; "
         });
+    };
+
+    const zanlive = (xhr) => {
+        if (
+            xhr.readyState === 4 && xhr.responseURL.includes("getKey")) {
+            const key = Array.from(new Uint8Array(xhr.response))
+                .map((i) => (i.toString(16).length === 1 ? "0" + i.toString(16) : i.toString(16)))
+                .join("");
+            notify({
+                type: "cookies",
+                cookies: "Z-aN_sid=" + document.cookie.match(/Z-aN_sid\=(.+?)(;|$)/)[1]
+            });
+            notify({
+                type: "key",
+                key: key,
+                url: xhr.responseURL
+            });
+        }
     };
 
     const dmm = (xhr) => {
